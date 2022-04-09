@@ -73,12 +73,15 @@ function Game:move_shot()
 		shot.vy = shot.vy * -1
 	end
 
-	self.shot_sprite:moveTo(self.shot.x, self.shot.y)
+	self.shot_sprite:moveTo(shot.x, shot.y)
 	if shot.fm <= 0 then
-		table.insert(self.board, {x=shot.x, y=shot.y, radius=15})
+		local radius = math.min(screenX - shot.x, math.abs(0 - shot.y), screenY - shot.y)
+		table.insert(self.board, {x=shot.x, y=shot.y, radius=radius})
 		self.shot = nil
 	end
 end
+
+
 
 function Game:update()
 	--- Angle update
