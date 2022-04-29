@@ -12,16 +12,13 @@ local bip <const> = playdate.buttonIsPressed
 
 local deg, rad = math.deg, math.rad
 local math_sin, math_cos, math_tan = math.sin, math.cos, math.tan
-local sin = function (x) return math_sin(rad(x)) end
-local cos = function (x) return math_cos(rad(x)) end
-local tan = function (x) return math_tan(rad(x)) end
+sin = function (x) return math_sin(rad(x)) end
+cos = function (x) return math_cos(rad(x)) end
+tan = function (x) return math_tan(rad(x)) end
 
 -- Global constants
 local screenX <const> = 400
 local screenY <const> = 240
-
-function draw_circle(x, y)
-end
 
 function Game:draw()
 	for _, c in pairs(game.board) do
@@ -46,6 +43,7 @@ function Game:draw_shooter()
 	t:rotate(self.angle)
 	self.images.muzzle:drawWithTransform(t, 10, 120)
 end
+
 function Game:move_shot()
 	--- Shot movement
 	if not self.shot then
@@ -57,8 +55,8 @@ function Game:move_shot()
 	shot.x = shot.x + shot.vx
 	shot.y = shot.y + shot.vy
 	-- this should apply as a vector shrinking
-	shot.vx = shot.vx * .97
-	shot.vy = shot.vy * .97
+	shot.vx = shot.vx * .93
+	shot.vy = shot.vy * .93
 	shot.fm = shot.fm - 1
 	if shot.x + shot.radius > screenX then
 		shot.x = 2 * screenX - 2 * shot.radius - shot.x
@@ -75,12 +73,32 @@ function Game:move_shot()
 
 	self.shot_sprite:moveTo(shot.x, shot.y)
 	if shot.fm <= 0 then
-		local radius = math.min(screenX - shot.x, math.abs(0 - shot.y), screenY - shot.y)
+		local closest_wall = math.min(
+			screenX - shot.x,
+			math.abs(0 - shot.y),
+			screenY - shot.y,
+			shot.x - 10
+		)
+
+		local radius = math.min(closest_wall, self:closest_ball(shot.x, shot.y, shot.radius))
 		table.insert(self.board, {x=shot.x, y=shot.y, radius=radius})
 		self.shot = nil
 	end
 end
 
+--- THIS IS WRONG.
+function Game:closest_ball(x, y, radius)
+	local ball_dist = {}
+	for _, ball in pairs(self.board) do
+		local xdist = ball.x - x
+		local ydist = ball.y - y
+		ball_dist[_] = ((xdist * xdist + ydist * ydist) -
+			(ball.radius * ball.radius + radius * radius)
+		)
+	end
+	print(math.sqrt(math.min(100000, table.unpack(ball_dist))))
+	return math.sqrt(math.min(100000, table.unpack(ball_dist)))
+end
 
 
 function Game:update()
@@ -114,7 +132,12 @@ function Game.ball_image()
 end
 
 function Game:shoot()
-	self.shot = {x=10, y=120, radius=8, vx=15, vy=math.random(-7,7), fm=60}
+	self.shot = {
+		x=10, y=120, radius=8,
+		vx=40*cos(self.angle),
+		vy=40*sin(self.angle),
+		fm=105, -- frames in motion (3.5sec @ 30fps)
+	}
 end
 
 function Game.new()
