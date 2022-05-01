@@ -227,7 +227,8 @@ function moveball()
         b.m = 100000;
         b.vx = 0
         b.vy = 0
-        news = nd / b.r * 10
+        -- news = nd / b.r * 10
+        news = nd
         switch(grow2, "Shootnow -> grow2")
         -- fsm = grow2
     end

@@ -7,13 +7,14 @@ gimme.balls = {[1]={}, [2]={}, [3]={}}
 function draw3(radius)
     local right = 1.25 * radius
     local left = .75 * radius
+    local left_mid = .85 * radius
     local middle = radius
     local top = .5 * radius
     local bottom = 1.5 * radius
     gfx.setColor(playdate.graphics.kColorBlack)
     gfx.drawLine(right, top, right, bottom)     -- right edge
     gfx.drawLine(right, top, left, top)         -- top
-    gfx.drawLine(right, middle, left, middle)   -- middle
+    gfx.drawLine(right, middle, left_mid, middle)   -- middle
     gfx.drawLine(right, bottom, left, bottom)   -- bottom
 end
 
