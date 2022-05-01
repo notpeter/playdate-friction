@@ -1,0 +1,7 @@
+name=gimmefriction
+author=Notpeter
+description=A Tribute to Gimme Friction Baby
+bundleID=net.notpeter.gimme
+version=1.0.0
+imagePath=images/card.png
+buildNumber=4
