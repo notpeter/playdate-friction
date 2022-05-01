@@ -20,7 +20,7 @@ local screenX <const> = 400
 local screenY <const> = 240
 local ballSize <const> = 9 -- was 10
 local startX <const> = screenX // 2 -- was 320
-local startY <const> = screenY - 23 -- was 450
+local startY <const> = screenY - 20 -- was 450
 local wallLeft <const> = 75 + ballSize
 local wallRight <const> = screenX - wallLeft
 local wallBottom <const> = screenY - 62
@@ -155,11 +155,11 @@ function newball()
 end
 
 function draw_shooter()
+    local bs2 = 2 * ballSize
     playdate.graphics.setColor(playdate.graphics.kColorWhite)
-    playdate.graphics.fillCircleInRect(arrow._x-8, arrow._y-8, 16, 16)
+    playdate.graphics.fillCircleInRect(arrow._x - ballSize, arrow._y - ballSize, bs2, bs2)
     playdate.graphics.setColor(playdate.graphics.kColorBlack)
-    playdate.graphics.drawCircleInRect(arrow._x-8, arrow._y-8, 16, 16)
-    -- playdate.graphics.drawArc(arrow._x, arrow._y, 10, arrow._rotation - 25, arrow._rotation + 25)
+    playdate.graphics.drawCircleInRect(arrow._x - ballSize, arrow._y - ballSize, bs2, bs2)
 end
 
 function shooter()
@@ -171,8 +171,8 @@ function shooter()
 
     l.deg = l.deg + l.mov;
     local angle_rad = rad(l.deg)
-    b.lx = math.cos(angle_rad) * 25 + startX
-    b.ly = math.sin(angle_rad) * 25 + startY
+    b.lx = math.cos(angle_rad) * (3.1 * ballSize) + startX
+    b.ly = math.sin(angle_rad) * (3.1 * ballSize) + startY
     arrow._x = b.lx
     arrow._y = b.ly
     -- l  -- line = {320, 450, b.lx, b.ly}
@@ -295,7 +295,7 @@ function grow2()
     b._yscale = b._yscale + _loc1_ / 5
     local img = next_image(b._xscale, b.n)
     b:setImage(img)
-    if _loc1_ < 5 then
+    if _loc1_ < 1 then
         b._xscale = news
         b._yscale = news
         -- b.cacheAsBitmap = true
