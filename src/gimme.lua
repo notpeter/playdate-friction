@@ -32,8 +32,8 @@ local friction = 0.975      -- coefficient of friction
 local n = -1                -- Next closest ball (num)
 local nd = 10000            -- Next closest ball distance
 local b = nil               -- Currently active Ball {lx,ly,r,vx,vy,f,m,_rotation}
-local l = {deg=182, mov=2}              -- Shooter state and step
-local arrow = {}             -- Rotating shooter {_x, _y, _rotation}
+local l = {deg=182, mov=2}  -- Shooter state and step
+local arrow = {}            -- Rotating shooter {_x, _y, _rotation}
 
 local barray = {}
 local firstshot = false     -- has the first shot occured
@@ -131,13 +131,12 @@ end
 function newball()
     i = i + 1
     b = spr.new( next_image(ballSize, 3) )
-    b.__tostring = ball_str
     b:moveTo( startX, startY )
     b:setVisible(true)
     b:setZIndex(100)
     b:add()
     b._xscale = ballSize
-    b._yscale = 1
+    b._yscale = ballSize
     b._x = startX
     b._y = startY
     b.r = ballSize    -- radius
@@ -215,6 +214,7 @@ function moveball()
         goscreen:moveTo(startX, -80)
         goscreen:setVisible(true)
         goscreen:add()
+        playdate.datastore.delete("state")
         fsm = gomove
         playdate.AButtonDown = restore
         playdate.upButtonDown = restore
@@ -296,6 +296,7 @@ function grow2()
         nd = 10000
         n = -1
         wall = false
+        save_state()
     end
 end
 
@@ -481,7 +482,57 @@ function playdate.crankUndocked()
     playdate.cranked = crank
 end
 
+function gimme.update()
+    playdate.graphics.sprite.update()
+    playdate.timer.updateTimers()
+    fsm()
+    draw_shooter()
+end
+
+function save_state()
+    local balls = {}
+    for _, ball in ipairs(barray) do
+        local bb = {}
+        for _a, attr in ipairs({"_xscale", "_yscale", "_x", "_y", "vx", "vy", "m", "n", "r"}) do
+            bb[attr] = ball[attr]
+        end
+        balls[#balls+1] = bb
+    end
+    table.remove(balls) -- the last ball in barray is the unshot shot (b)
+    local state = {
+        l = l,
+        barray = balls,
+        score = score,
+    }
+    playdate.datastore.write(state, "state")
+end
+
+function load_state(state)
+    for _, _ball in ipairs(state["barray"]) do
+        local _b = spr.new( next_image(_ball.r, _ball.n) )
+        _b:moveTo(_ball._x, _ball._y)
+        _b:setZIndex(100)
+        _b:add()
+        for attr, value in pairs(_ball) do
+            _b[attr] = value
+        end
+        barray[#barray+1] = _b
+    end
+    b = barray[#barray]
+    l = state["l"]
+    score = state["score"]
+end
+
 function setup()
+    -- playdate.datastore.delete("state")
+    if playdate.buttonIsPressed("B") then
+        playdate.datastore.delete("state")
+    else
+        local state = playdate.datastore.read("state")
+        if state then
+            load_state(state) -- maybe use pcall?
+        end
+    end
     update_score_sprites(hiscore_sprites, hiscore)
     newball()
     tripod:moveTo(startX, screenY - 20)
@@ -500,11 +551,4 @@ function setup()
 end
 
 setup()
-
-function gimme.update()
-    playdate.graphics.sprite.update()
-    playdate.timer.updateTimers()
-    fsm()
-    draw_shooter()
-end
 
