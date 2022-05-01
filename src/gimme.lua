@@ -43,11 +43,6 @@ local score = 0             -- Score
 local hiscore = (playdate.datastore.read("score") or {})["score"] or 0
 local fsm = nil
 
-local function switch(f, comment)
-    print(comment)
-    fsm = f
-end
-
 local sound_music = playdate.sound.sampleplayer.new("sound/bgmusic")
 local sound_crack = playdate.sound.sampleplayer.new("sound/crack")
 local sound_shoot = playdate.sound.sampleplayer.new("sound/shoot")
@@ -120,7 +115,6 @@ local function next_image(r, n)
     local sz = nil
     for size, image in pairs(ball_images[n]) do
         if r > size then
-            -- print(r, size)
             im = image
             sz = size
         end
@@ -194,12 +188,9 @@ function shootnow()
     sound_shoot:play()
     b.vx = (- (b.lx - startX)) / 3.5
     b.vy = (- (b.ly - startY)) / 3.5
-    -- print(ball_str(b))
-    -- fsm = moveball
-    switch(moveball, "Shootnow -> moveball")
+    fsm = moveball
     playdate.AButtonDown = nil
     playdate.upButtonDown = nil
-    -- l.clear()
 end
 
 function moveball()
@@ -224,8 +215,7 @@ function moveball()
         goscreen:moveTo(startX, -80)
         goscreen:setVisible(true)
         goscreen:add()
-        switch(gomove, "moveball -> gomove")
-        -- fsm = gomove
+        fsm = gomove
         playdate.AButtonDown = restore
         playdate.upButtonDown = restore
         playdate.cranked = nil  -- disable moving shooter when dead.
@@ -237,8 +227,7 @@ function moveball()
         b.vy = 0
         -- news = nd / b.r * 10
         news = nd
-        switch(grow2, "Shootnow -> grow2")
-        -- fsm = grow2
+        fsm = grow2
     end
 end
 
@@ -256,8 +245,6 @@ function findn()
             end
             p = p + 1
         end
-        -- Collision check with closest ball
-        -- print("CHECK", b, barray[n])
         checkColl(b, barray[n])
     end
     n = -1
@@ -276,22 +263,18 @@ function calc()
     end
 
     if b._x - wallLeft < nd then
-        print("wall-left")
         nd = b._x - wallLeft + b.r
         wall = true
     end
     if wallRight - b._x < nd then
-        print("wall-right")
         nd = wallRight - b._x + b.r
         wall = true
     end
     if b._y - wallTop < nd then
-        print("wall-top")
         nd = b._y - wallTop
         wall = true
     end
     if(wallBottom - b._y < nd) then
-        print("wall-bottom")
         nd = wallBottom - b._y
         wall = true
     end
@@ -306,13 +289,10 @@ function grow2()
     if _loc1_ < 1 then
         b._xscale = news
         b._yscale = news
-        -- b.cacheAsBitmap = true
         b.r = nd
         b:setImage(next_image(b.r, b.n))
-        -- print(ball_str(b))
         newball()
-        switch(shooter, "Grow2 -> shooter")
-        -- fsm = shooter
+        fsm = shooter
         nd = 10000
         n = -1
         wall = false
@@ -323,9 +303,7 @@ function checkColl(b1, b2)
     local xdist = b2._x - b1._x
     local ydist = b2._y - b1._y
     local dist = math.sqrt(xdist * xdist + ydist * ydist) -- center to center
-    -- print("dist", dist, b1.r, b2.r, (dist < b1.r + b2.r))
     if dist < b1.r + b2.r then -- Collide
-        print("COLLIDE")
         local between = dist - (b1.r + b2.r) -- between balls
         local xratio = xdist / dist
         local yratio = ydist / dist
@@ -333,7 +311,6 @@ function checkColl(b1, b2)
         b1._y = b1._y + between * yratio
         b2.n = b2.n - 1
         if b2.n == 0 then -- Ball pop
-            print("ZERO DROP")
             update_score(score + 1)
             sound_crack:play()
             b2:remove()
@@ -417,8 +394,7 @@ function restore()
    nd = 10000
    wall = false
    news = 0
-   switch(shooter, "restore -> shooter")
-   -- fsm = shooter
+   fsm = shooter
    newball()
    sound_music:play(9999)
    playdate.AButtonDown = shootnow
@@ -488,7 +464,6 @@ end
 -- end
 
 function crank(change, acceleratedChange)
-    print("Crank", change, acceleratedChange)
     l.deg = l.deg + acceleratedChange / 4
     if l.deg > 360 then
         l.deg = 360
@@ -514,8 +489,7 @@ function setup()
     tripod:setZIndex(200)
     sound_music:setVolume(0.1)
     sound_music:play(9999)
-    switch(shooter, "setup -> shooter")
-    -- fsm = shooter
+    fsm = shooter
     playdate.AButtonDown = shootnow
     playdate.upButtonDown = shootnow
 
