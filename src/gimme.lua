@@ -40,7 +40,8 @@ local firstshot = false     -- has the first shot occured
 local wall = false
 local news = 0              -- New Scale (growing to)
 local score = 0             -- Score
-local hiscore = 0           -- High Score
+local hiscore = (playdate.datastore.read("score") or {})["score"] or 0
+print("HISCORE", hiscore, playdate.datastore.read("score"))
 local fsm = nil
 
 local function switch(f, comment)
@@ -99,18 +100,19 @@ local background = spr.setBackgroundDrawingCallback(
 )
 local ball_images = gimme.balls
 
+local function update_score_sprites(sprs, s)
+    sprs[3]:setImage( digit_images[s % 10] )
+    sprs[2]:setImage( digit_images[(s // 10) % 10 ] )
+    sprs[1]:setImage( digit_images[(s // 100) % 100] )
+end
+
 local function update_score(s)
     score = s
-    score_sprites[3]:setImage( digit_images[s % 10] )
-    score_sprites[2]:setImage( digit_images[(s // 10) % 10 ] )
-    score_sprites[1]:setImage( digit_images[(s // 100) % 100] )
-
+    update_score_sprites(score_sprites, score)
     if score > hiscore then
-        -- TODO: Persist this immediately. Load/Save on startup
         hiscore = score
-        hiscore_sprites[3]:setImage( digit_images[s % 10] )
-        hiscore_sprites[2]:setImage( digit_images[(s // 10) % 10 ] )
-        hiscore_sprites[1]:setImage( digit_images[(s // 100) % 100] )
+        update_score_sprites(hiscore_sprites, hiscore)
+        playdate.datastore.write({score=hiscore}, "score")
     end
 end
 
@@ -182,14 +184,13 @@ function shooter()
 end
 
 function shootnow()
-    print("SHOOT")
     if firstshot == false then
         firstshot = true
         -- blend away opening
     end
     sound_shoot:play()
-    b.vx = (- (b.lx - startX)) / 4
-    b.vy = (- (b.ly - startY)) / 4
+    b.vx = (- (b.lx - startX)) / 3.5
+    b.vy = (- (b.ly - startY)) / 3.5
     -- print(ball_str(b))
     -- fsm = moveball
     switch(moveball, "Shootnow -> moveball")
@@ -469,8 +470,8 @@ end
 -- end
 
 function setup()
+    update_score_sprites(hiscore_sprites, hiscore)
     newball()
-    -- (moveball, gomove, grow2, shooter)
     tripod:moveTo(startX, screenY - 20)
     tripod:add()
     tripod:setZIndex(200)
