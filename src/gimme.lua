@@ -533,6 +533,7 @@ function setup()
             load_state(state) -- maybe use pcall?
         end
     end
+    update_score_sprites(score_sprites, score)
     update_score_sprites(hiscore_sprites, hiscore)
     newball()
     tripod:moveTo(startX, screenY - 20)
