@@ -47,28 +47,22 @@ function draw1(radius)
 end
 
 
-function makeImage(radius, n)
+function makeImage(radius, draw_func)
     local r2 = radius * 2
     local image = img.new(r2, r2)
     gfx.lockFocus(image)
         gfx.setColor(playdate.graphics.kColorWhite)
         gfx.fillCircleInRect(0, 0, r2, r2)
-        if n == 3 then
-            draw3(radius)
-        elseif n == 2 then
-            draw2(radius)
-        elseif n == 1 then
-            draw1(radius)
-        end
+        draw_func(radius)
     gfx.unlockFocus()
     return image
 end
 
 function setup()
     gfx.setLineCapStyle(playdate.graphics.kLineCapStyleSquare)
-    for j = 1,3 do
-        for i = 1,175 do
-            gimme.balls[j][i] = makeImage(i, j)
+    for n, draw_func in pairs({[1]=draw1, [2]=draw2, [3]=draw3, [4]=draw4}) do
+        for radius = 1,175 do
+            gimme.balls[n][radius] = makeImage(radius, draw_func)
         end
     end
 end
