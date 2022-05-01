@@ -41,7 +41,6 @@ local wall = false
 local news = 0              -- New Scale (growing to)
 local score = 0             -- Score
 local hiscore = (playdate.datastore.read("score") or {})["score"] or 0
-print("HISCORE", hiscore, playdate.datastore.read("score"))
 local fsm = nil
 
 local function switch(f, comment)
@@ -217,7 +216,7 @@ function moveball()
         sound_music:stop()
         -- createexp(b) -- create explosion
         b:remove()
-        goscreen:moveTo(startX, -160)
+        goscreen:moveTo(startX, -80)
         goscreen:add()
         switch(gomove, "moveball -> gomove")
         -- fsm = gomove
@@ -228,8 +227,7 @@ function moveball()
         b.m = 100000;
         b.vx = 0
         b.vy = 0
-        -- news = nd / b.r * 100
-        news = nd
+        news = nd / b.r * 10
         switch(grow2, "Shootnow -> grow2")
         -- fsm = grow2
     end
@@ -270,12 +268,12 @@ function calc()
 
     if b._x - wallLeft < nd then
         print("wall-left")
-        nd = b._x - wallLeft
+        nd = b._x - wallLeft + b.r
         wall = true
     end
     if wallRight - b._x < nd then
         print("wall-right")
-        nd = wallRight - b._x
+        nd = wallRight - b._x + b.r
         wall = true
     end
     if b._y - wallTop < nd then
