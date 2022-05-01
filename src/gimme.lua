@@ -54,6 +54,8 @@ local image_tripod = img.new("images/tripod")
 local image_gameover = img.new("images/gameover250")
 local goscreen = spr.new( image_gameover )
 goscreen:setZIndex(500)
+local image_logo = img.new("images/logo")
+local title_sprite = spr.new( image_logo )
 
 -- High score
 local digit_images = {}
@@ -182,7 +184,7 @@ end
 function shootnow()
     if firstshot == false then
         firstshot = true
-        -- blend away opening
+        title_sprite:setVisible(false)
     end
     sound_shoot:play()
     b.vx = (- (b.lx - startX)) / 3.5
@@ -531,6 +533,9 @@ function setup()
         local state = playdate.datastore.read("state")
         if state then
             load_state(state) -- maybe use pcall?
+        else
+            title_sprite:moveTo(200, 100)
+            title_sprite:add()
         end
     end
     update_score_sprites(score_sprites, score)
