@@ -48,6 +48,7 @@ local sound_crack = playdate.sound.sampleplayer.new("sound/crack")
 local sound_shoot = playdate.sound.sampleplayer.new("sound/shoot")
 local sound_wall = playdate.sound.sampleplayer.new("sound/wall")
 
+local ball_images = gimme.balls
 local image_background = img.new("images/background")
 local image_tripod = img.new("images/tripod")
 local image_gameover = img.new("images/gameover250")
@@ -92,7 +93,6 @@ local background = spr.setBackgroundDrawingCallback(
         gfx.clearClipRect()
     end
 )
-local ball_images = gimme.balls
 
 local function update_score_sprites(sprs, s)
     sprs[3]:setImage( digit_images[s % 10] )
