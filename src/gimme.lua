@@ -162,24 +162,28 @@ function draw_shooter()
     playdate.graphics.drawCircleInRect(arrow._x - ballSize, arrow._y - ballSize, bs2, bs2)
 end
 
-function shooter()
-    playdate.AButtonDown = shootnow
-    -- FIXME: Add continuous support; assumes 2degree steps.
-    if l.deg == 360 or l.deg == 180 then
-        l.mov = -1 * l.mov
-    end
-
-    l.deg = l.deg + l.mov;
+function update_shooter()
     local angle_rad = rad(l.deg)
     b.lx = math.cos(angle_rad) * (3.1 * ballSize) + startX
     b.ly = math.sin(angle_rad) * (3.1 * ballSize) + startY
     arrow._x = b.lx
     arrow._y = b.ly
-    -- l  -- line = {320, 450, b.lx, b.ly}
+    -- l  -- line = {startX, startY, b.lx, b.ly}
     local dx = b._x - b.lx
     local dy = b._y - b.ly
     arrow._rotation = deg(math.atan2(dy, dx)) -90
-    draw_shooter()
+end
+
+function shooter()
+    playdate.AButtonDown = shootnow
+    playdate.upButtonDown = shootnow
+    if playdate.isCrankDocked() then
+        if l.deg > 360 or l.deg < 180 then
+            l.mov = -1 * l.mov
+        end
+        l.deg = (l.deg + l.mov) // 2 * 2;
+    end
+    update_shooter()
 end
 
 function shootnow()
@@ -194,6 +198,7 @@ function shootnow()
     -- fsm = moveball
     switch(moveball, "Shootnow -> moveball")
     playdate.AButtonDown = nil
+    playdate.upButtonDown = nil
     -- l.clear()
 end
 
@@ -217,10 +222,13 @@ function moveball()
         -- createexp(b) -- create explosion
         b:remove()
         goscreen:moveTo(startX, -80)
+        goscreen:setVisible(true)
         goscreen:add()
         switch(gomove, "moveball -> gomove")
         -- fsm = gomove
         playdate.AButtonDown = restore
+        playdate.upButtonDown = restore
+        playdate.cranked = nil  -- disable moving shooter when dead.
     end
     if math.abs(b.vx) + math.abs(b.vy) < 0.2 then
         calc();
@@ -327,6 +335,7 @@ function checkColl(b1, b2)
         if b2.n == 0 then -- Ball pop
             print("ZERO DROP")
             update_score(score + 1)
+            sound_crack:play()
             b2:remove()
             -- Draw a zero falling
             -- zero = _root.attachMovie("zero","zero",_root.getNextHighestDepth());
@@ -349,6 +358,7 @@ function checkColl(b1, b2)
             --     this.removeMovieClip()
             -- end
         else
+            sound_crack:play()
             b2:setImage( next_image(b2.r, b2.n) )
         end
 
@@ -381,6 +391,11 @@ end
 
  -- game over screen move down
 function gomove()
+    if playdate.buttonIsPressed(playdate.kButtonB) then
+        goscreen:setVisible(false)
+    else
+        goscreen:setVisible(true)
+    end
     local stop_y = 88
     if goscreen.y < stop_y then
         goscreen:moveBy(0, 5)
@@ -407,6 +422,10 @@ function restore()
    newball()
    sound_music:play(9999)
    playdate.AButtonDown = shootnow
+   playdate.upButtonDown = shootnow
+   if not playdate.isCrankDocked() then
+       playdate.cranked = crank
+   end
 end
 
 
@@ -468,6 +487,25 @@ end
 --   end
 -- end
 
+function crank(change, acceleratedChange)
+    print("Crank", change, acceleratedChange)
+    l.deg = l.deg + acceleratedChange / 4
+    if l.deg > 360 then
+        l.deg = 360
+    elseif l.deg < 180 then
+        l.deg = 180
+    end
+    update_shooter()
+end
+
+function playdate.crankDocked()
+    playdate.cranked = nil
+end
+
+function playdate.crankUndocked()
+    playdate.cranked = crank
+end
+
 function setup()
     update_score_sprites(hiscore_sprites, hiscore)
     newball()
@@ -479,6 +517,12 @@ function setup()
     switch(shooter, "setup -> shooter")
     -- fsm = shooter
     playdate.AButtonDown = shootnow
+    playdate.upButtonDown = shootnow
+
+    playdate.setCrankSoundsDisabled(true)
+    if not playdate.isCrankDocked() then
+        playdate.cranked = crank
+    end
 end
 
 setup()
