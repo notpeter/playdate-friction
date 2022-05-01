@@ -143,7 +143,7 @@ function newball()
     b:setVisible(true)
     b:setZIndex(100)
     b:add()
-    b._xscale = 1
+    b._xscale = ballSize
     b._yscale = 1
     b._x = startX
     b._y = startY
