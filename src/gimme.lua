@@ -5,6 +5,9 @@ local gfx <const> = playdate.graphics
 local ani <const> = playdate.graphics.animator
 local img <const> = playdate.graphics.image
 local spr <const> = playdate.graphics.sprite
+local white <const> = playdate.graphics.kColorWhite
+local black <const> = playdate.graphics.kColorBlack
+
 
 -- Helper functions
 local function rad(deg)
@@ -49,6 +52,9 @@ local sound_shoot = playdate.sound.sampleplayer.new("sound/shoot")
 local sound_wall = playdate.sound.sampleplayer.new("sound/wall")
 
 local ball_images = gimme.balls
+local shooter_image = img.new( 2 * ballSize, 2 * ballSize)
+local shooter_sprite = spr.new( shooter_image )
+
 local image_background = img.new("images/background")
 local image_tripod = img.new("images/tripod")
 local image_gameover = img.new("images/gameover250")
@@ -57,35 +63,15 @@ goscreen:setZIndex(500)
 local image_logo = img.new("images/logo")
 local title_sprite = spr.new( image_logo )
 
--- High score
-local digit_images = {}
-for i = 0,9 do
-    digit_images[i] = img.new( "images/digit" .. i )
-end
-
-local score_sprites = {
-    [1]=spr.new(digit_images[0]),
-    [2]=spr.new(digit_images[0]),
-    [3]=spr.new(digit_images[0]),
-}
-score_sprites[1]:moveTo(352, 50)
-score_sprites[1]:add()
-score_sprites[2]:moveTo(362, 50)
-score_sprites[2]:add()
-score_sprites[3]:moveTo(372, 50)
-score_sprites[3]:add()
-
-local hiscore_sprites = {
-    [1]=spr.new(digit_images[0]),
-    [2]=spr.new(digit_images[0]),
-    [3]=spr.new(digit_images[0]),
-}
-hiscore_sprites[1]:moveTo(352, 155)
-hiscore_sprites[1]:add()
-hiscore_sprites[2]:moveTo(362, 155)
-hiscore_sprites[2]:add()
-hiscore_sprites[3]:moveTo(372, 155)
-hiscore_sprites[3]:add()
+local digit_font = playdate.graphics.font.new("fonts/gimme-digits")
+local score_image = img.new( 40, 15, white)
+local score_sprite = spr.new ( score_image )
+score_sprite:moveTo(362, 50)
+score_sprite:add()
+local hiscore_image = img.new( 45, 15, white)
+local hiscore_sprite = spr.new ( hiscore_image )
+hiscore_sprite:moveTo(362, 155)
+hiscore_sprite:add()
 
 local tripod = spr.new( image_tripod )
 local background = spr.setBackgroundDrawingCallback(
@@ -96,20 +82,32 @@ local background = spr.setBackgroundDrawingCallback(
     end
 )
 
-local function update_score_sprites(sprs, s)
-    sprs[3]:setImage( digit_images[s % 10] )
-    sprs[2]:setImage( digit_images[(s // 10) % 10 ] )
-    sprs[1]:setImage( digit_images[(s // 100) % 100] )
+local function draw_shooter(image)
+    gfx.lockFocus(image)
+        playdate.graphics.setColor(white)
+        playdate.graphics.fillCircleInRect(0, 0, 2 * ballSize, 2 * ballSize)
+        playdate.graphics.setColor(black)
+        playdate.graphics.drawCircleInRect(0, 0, 2 * ballSize, 2 * ballSize)
+    gfx.unlockFocus()
+    return image
+end
+
+local function draw_score(image, num)
+    image:clear(white)
+    gfx.lockFocus(image)
+        gfx.setColor(black)
+        digit_font:drawTextAligned(num, 20, 0, kTextAlignment.center)
+    gfx.unlockFocus()
 end
 
 local function update_score(s)
     score = s
-    update_score_sprites(score_sprites, score)
     if score > hiscore then
         hiscore = score
-        update_score_sprites(hiscore_sprites, hiscore)
         playdate.datastore.write({score=hiscore}, "score")
     end
+    draw_score(score_image, score)
+    draw_score(hiscore_image, hiscore)
 end
 
 local function next_image(r, n)
@@ -149,14 +147,6 @@ function newball()
     barray[#barray+1] = b
 end
 
-function draw_shooter()
-    local bs2 = 2 * ballSize
-    playdate.graphics.setColor(playdate.graphics.kColorWhite)
-    playdate.graphics.fillCircleInRect(arrow._x - ballSize, arrow._y - ballSize, bs2, bs2)
-    playdate.graphics.setColor(playdate.graphics.kColorBlack)
-    playdate.graphics.drawCircleInRect(arrow._x - ballSize, arrow._y - ballSize, bs2, bs2)
-end
-
 function update_shooter()
     local angle_rad = rad(l.deg)
     b.lx = math.cos(angle_rad) * (3.1 * ballSize) + startX
@@ -167,6 +157,7 @@ function update_shooter()
     local dx = b._x - b.lx
     local dy = b._y - b.ly
     arrow._rotation = deg(math.atan2(dy, dx)) -90
+    shooter_sprite:moveTo(arrow._x, arrow._y)
 end
 
 function shooter()
@@ -316,6 +307,7 @@ function checkColl(b1, b2)
         if b2.n == 0 then -- Ball pop
             update_score(score + 1)
             sound_crack:play()
+            b2:setImage( next_image(b2.r, b2.n))
             b2:remove()
             -- Draw a zero falling
             -- zero = _root.attachMovie("zero","zero",_root.getNextHighestDepth());
@@ -386,25 +378,25 @@ function gomove()
 end
 
 function restore()
-   update_score(0)
-   goscreen:remove()
-   for j = 1,#barray do
-       barray[j]:remove()
-   end
-   barray = {}
-   i = 10
-   n = -1
-   nd = 10000
-   wall = false
-   news = 0
-   fsm = shooter
-   newball()
-   sound_music:play(9999)
-   playdate.AButtonDown = shootnow
-   playdate.upButtonDown = shootnow
-   if not playdate.isCrankDocked() then
-       playdate.cranked = crank
-   end
+    update_score(0)
+    goscreen:remove()
+    for j = 1,#barray do
+        barray[j]:remove()
+    end
+    barray = {}
+    i = 10
+    n = -1
+    nd = 10000
+    wall = false
+    news = 0
+    fsm = shooter
+    newball()
+    sound_music:play(9999)
+    playdate.AButtonDown = shootnow
+    playdate.upButtonDown = shootnow
+    if not playdate.isCrankDocked() then
+        playdate.cranked = crank
+    end
 end
 
 
@@ -488,7 +480,6 @@ function gimme.update()
     playdate.graphics.sprite.update()
     playdate.timer.updateTimers()
     fsm()
-    draw_shooter()
 end
 
 function save_state()
@@ -538,12 +529,19 @@ function setup()
             title_sprite:add()
         end
     end
-    update_score_sprites(score_sprites, score)
-    update_score_sprites(hiscore_sprites, hiscore)
+    gfx.setColor(black)
+    update_score(score)
     newball()
+
     tripod:moveTo(startX, screenY - 20)
     tripod:add()
     tripod:setZIndex(200)
+
+    draw_shooter(shooter_image)
+    update_shooter()
+    shooter_sprite:setZIndex(201)
+    shooter_sprite:add()
+
     sound_music:setVolume(0.1)
     sound_music:play(9999)
     fsm = shooter

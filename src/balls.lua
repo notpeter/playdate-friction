@@ -1,8 +1,10 @@
 local gfx <const> = playdate.graphics
 local img <const> = playdate.graphics.image
+local white <const> = playdate.graphics.kColorWhite
+local black <const> = playdate.graphics.kColorBlack
 
 gimme = gimme or {}
-gimme.balls = {[1]={}, [2]={}, [3]={}}
+gimme.balls = {}
 
 function draw3(radius)
     local right = 1.25 * radius
@@ -12,8 +14,10 @@ function draw3(radius)
     local top = .5 * radius
     local bottom = 1.5 * radius
     local line_width = radius // 5 + 1
+    gfx.setColor(white)
+    gfx.fillCircleInRect(0, 0, radius * 2, radius * 2)
     gfx.setLineWidth(line_width)
-    gfx.setColor(playdate.graphics.kColorBlack)
+    gfx.setColor(black)
     gfx.drawLine(right, top, right, bottom)     -- right edge
     gfx.drawLine(right, top, left, top)         -- top
     gfx.drawLine(right, middle, left_mid, middle)   -- middle
@@ -27,8 +31,10 @@ function draw2(radius)
     local top = .5 * radius
     local bottom = 1.5 * radius
     local line_width = radius // 5 + 1
+    gfx.setColor(white)
+    gfx.fillCircleInRect(0, 0, radius * 2, radius * 2)
     gfx.setLineWidth(line_width)
-    gfx.setColor(playdate.graphics.kColorBlack)
+    gfx.setColor(black)
     gfx.drawLine(right, top, left, top)         -- top
     gfx.drawLine(right, top, right, middle)     -- up right
     gfx.drawLine(right, middle, left, middle)   -- middle
@@ -41,26 +47,40 @@ function draw1(radius)
     local top = .5 * radius
     local bottom = 1.5 * radius
     local line_width = radius // 5 + 1
+    gfx.setColor(white)
+    gfx.fillCircleInRect(0, 0, radius * 2, radius * 2)
     gfx.setLineWidth(line_width)
-    gfx.setColor(playdate.graphics.kColorBlack)
+    gfx.setColor(black)
     gfx.drawLine(middle, top, middle, bottom)
 end
 
+function draw0(radius)
+    local right = 1.25 * radius
+    local left = .75 * radius
+    local top = .5 * radius
+    local bottom = 1.5 * radius
+    local line_width = radius // 5 + 1
+    gfx.setLineWidth(line_width)
+    gfx.setColor(white)
+    gfx.drawLine(right, top, left, top)
+    gfx.drawLine(left, top, left, bottom)
+    gfx.drawLine(left, bottom, right, bottom)
+    gfx.drawLine(right, bottom, right, top)
+end
 
 function makeImage(radius, draw_func)
-    local r2 = radius * 2
-    local image = img.new(r2, r2)
+    local image = img.new(radius * 2, radius * 2)
     gfx.lockFocus(image)
-        gfx.setColor(playdate.graphics.kColorWhite)
-        gfx.fillCircleInRect(0, 0, r2, r2)
         draw_func(radius)
     gfx.unlockFocus()
     return image
 end
 
 function setup()
+    local max_size = 175
     gfx.setLineCapStyle(playdate.graphics.kLineCapStyleSquare)
-    for n, draw_func in pairs({[1]=draw1, [2]=draw2, [3]=draw3, [4]=draw4}) do
+    for n, draw_func in pairs({[0]=draw0, [1]=draw1, [2]=draw2, [3]=draw3}) do
+        gimme.balls[n] = {}
         for radius = 1,175 do
             gimme.balls[n][radius] = makeImage(radius, draw_func)
         end
