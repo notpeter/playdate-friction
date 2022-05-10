@@ -349,8 +349,6 @@ function checkColl(b1, b2)
             table.remove(barray, n)
             return
         end
-        -- b2.gotoAndStop(b2.f)
-        -- createpart(b1,b2)
     end
 end
 
