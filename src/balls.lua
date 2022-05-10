@@ -68,6 +68,13 @@ function draw0(radius)
     gfx.drawLine(right, bottom, right, top)
 end
 
+function loadImage(diameter, cnt)
+    -- Note returns nil file not found. Which won't get stored in the Lua tbl.
+    local filename = string.format("images/balls/%s-%s", diameter, cnt)
+    local i = img.new( filename )
+    return i
+end
+
 function makeImage(radius, draw_func)
     local image = img.new(radius * 2, radius * 2)
     gfx.lockFocus(image)
@@ -77,12 +84,16 @@ function makeImage(radius, draw_func)
 end
 
 function setup()
-    local max_size = 175
+    local min_size, max_size = 1, 175
     gfx.setLineCapStyle(playdate.graphics.kLineCapStyleSquare)
     for n, draw_func in pairs({[0]=draw0, [1]=draw1, [2]=draw2, [3]=draw3}) do
         gimme.balls[n] = {}
-        for radius = 1,175 do
-            gimme.balls[n][radius] = makeImage(radius, draw_func)
+        for radius = min_size,max_size do
+            if radius >= 9 then
+                gimme.balls[n][radius] = makeImage(radius, draw_func)
+            else
+                gimme.balls[n][radius] = loadImage(2 * radius, n)
+            end
         end
     end
 end

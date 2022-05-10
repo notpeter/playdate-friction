@@ -39,6 +39,7 @@ local l = {deg=182, mov=2}  -- Shooter state and step
 local arrow = {}            -- Rotating shooter {_x, _y, _rotation}
 
 barray = {}
+ubarray = {}
 local zeroes = {}
 local firstshot = false     -- has the first shot occured
 local wall = false
@@ -112,12 +113,10 @@ local function update_score(s)
 end
 
 local function next_image(r, n)
-    local im = nil
-    local sz = nil
+    local im = ball_images[n][4]
     for size, image in pairs(ball_images[n]) do
-        if r > size then
+        if r >= size then
             im = image
-            sz = size
         end
     end
     return im
@@ -168,7 +167,9 @@ function shooter()
         if l.deg > 360 or l.deg < 180 then
             l.mov = -1 * l.mov
         end
-        l.deg = (l.deg + l.mov) // 2 * 2;
+        -- original game only supported 0,180; step=2.
+        -- this rand term at the end keeps things interesting.
+        l.deg = (l.deg + l.mov) + math.random(-10,10) * .01;
     end
     update_shooter()
 end
@@ -214,12 +215,14 @@ function moveball()
         playdate.upButtonDown = restore
         playdate.cranked = nil  -- disable moving shooter when dead.
     end
+    -- Use of 0.2 here is arbitrary. Playdate only supports integer x,y
+    -- positions. Original (flash) could render non integer coords. Anything
+    -- lower than 0.2 feels unnatural; balls move a whole extra pixel at the end
     if math.abs(b.vx) + math.abs(b.vy) < 0.2 then
         calc();
         b.m = 100000;
         b.vx = 0
         b.vy = 0
-        -- news = nd / b.r * 10
         news = nd
         fsm = grow2
     end
@@ -237,7 +240,7 @@ function findn()
                 nd = ball_dist
                 n = p
             end
-            p = p + 1
+            p = p + 1 -- this skips barray[#barray] (current shot)
         end
         checkColl(b, barray[n])
     end
@@ -256,11 +259,11 @@ function calc()
         end
     end
 
-    if b._x - wallLeft < nd then
+    if b._x - wallLeft + b.r < nd then
         nd = b._x - wallLeft + b.r
         wall = true
     end
-    if wallRight - b._x < nd then
+    if wallRight - b._x + b.r < nd then
         nd = wallRight - b._x + b.r
         wall = true
     end
@@ -270,6 +273,11 @@ function calc()
     end
     if(wallBottom - b._y < nd) then
         nd = wallBottom - b._y
+        if nd < 0 then
+            ubarray[#ubarray] = b
+            table.remove(barray, #barray)
+            nd = math.abs(nd)
+        end
         wall = true
     end
 end
@@ -283,6 +291,14 @@ function grow2()
     if _loc1_ < 1 then
         b._xscale = news
         b._yscale = news
+        -- this is arbitrary because of the resolution of our display (400x240).
+        -- smaller balls are rare (only when close to the bottom line)
+        -- and have images drawn by hand. 7x7 (r=3.5) is the smallest we can do
+        -- so I've named the 7x7 as the 6x6 (images/balls/6-{3,2,1,0}.png)
+        -- which will be used here.
+        if nd < 3 then
+            nd = 3
+        end
         b.r = nd
         b:setImage(next_image(b.r, b.n))
         newball()
