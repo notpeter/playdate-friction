@@ -38,7 +38,8 @@ local b = nil               -- Currently active Ball {lx,ly,r,vx,vy,f,m,_rotatio
 local l = {deg=182, mov=2}  -- Shooter state and step
 local arrow = {}            -- Rotating shooter {_x, _y, _rotation}
 
-local barray = {}
+barray = {}
+local zeroes = {}
 local firstshot = false     -- has the first shot occured
 local wall = false
 local news = 0              -- New Scale (growing to)
@@ -304,35 +305,8 @@ function checkColl(b1, b2)
         b1._x = b1._x + between * xratio
         b1._y = b1._y + between * yratio
         b2.n = b2.n - 1
-        if b2.n == 0 then -- Ball pop
-            update_score(score + 1)
-            sound_crack:play()
-            b2:setImage( next_image(b2.r, b2.n))
-            b2:remove()
-            -- Draw a zero falling
-            -- zero = _root.attachMovie("zero","zero",_root.getNextHighestDepth());
-            -- zero._x = b2._x
-            -- zero._y = b2._y
-            -- zero._xscale = b2._xscale
-            -- zero._yscale = b2._xscale
-            -- zero._rotation = b2._rotation
-            -- local _loc9_ = math.sqrt(b.vx * b.vx + b.vy * b.vy);
-            -- zero.vx = xratio * _loc9_
-            -- zero.vy = yratio * _loc9_
-            -- zero.rot = math.random() * 4 - 2
-            -- zero.onEnterFrame = function()
-            -- this.vy = this.vy + 0.2
-            -- this._x = this._x + this.vx
-            -- this._y = this._y + this.vy
-            -- this._rotation = this._rotation + this.rot
-            -- if this._y > 1000 then
-            --     -- delete this.onEnterFrame
-            --     this.removeMovieClip()
-            -- end
-        else
-            sound_crack:play()
-            b2:setImage( next_image(b2.r, b2.n) )
-        end
+        sound_crack:play()
+        b2:setImage( next_image(b2.r, b2.n) )
 
         local atan2 = math.atan2(ydist, xdist)
         local cosa = math.cos(atan2)
@@ -351,8 +325,11 @@ function checkColl(b1, b2)
         cosd = cosa * diff
         sind = sina * diff
         if(b2.n == 0) then
-            -- createexp(b2)
-            -- b2.removeMovieClip()
+            update_score(score + 1)
+            b2:setImage( next_image(b2.r, b2.n))
+            zeroes[#zeroes+1] = b2
+            b2.vx = 0
+            b2.vy = 5
             table.remove(barray, n)
             return
         end
@@ -408,55 +385,7 @@ function createpart(b1, b2)
     local _loc6_ = math.atan2(ydist, xdist)
     local x_pos = math.cos(_loc6_) * b1.r + b1._x
     local y_pos = math.sin(_loc6_) * b1.r + b1._y
-    -- for pc = 0,9 do
-    --     local part = {}
-    --     -- part = _root.attachMovie("part","part",_root.getNextHighestDepth())
-    --     part._x = x_pos
-    --     part._y = y_pos
-    --     part.vx = Math.random() * 10 - 5
-    --     part.vy = Math.random() * 10 - 5
-    --     part.gotoAndStop(random(2) + 1)
-    --     part.onEnterFrame = function()
-    --         this.vy = this.vy + 0.1
-    --         this._x += this.vx
-    --         this._y += this.vy
-    --         this._alpha -= 1
-    --         if this._alpha < 10 then
-    --             -- delete this.onEnterFrame;
-    --             this.removeMovieClip()
-    --         end
-    --     end
-    -- end
 end
-
-
-
--- Create explosion
--- function Game:createexp(b2)
---   Game.sound_crack:play()
---   for pc = 0, 19 do
---     -- cut = _root.createEmptyMovieClip("cut",_root.getNextHighestDepth());
---     cut = {} -- Sprite on top
---     -- lineTo(random(30) - 15, random(30) - 15)
---     -- lineTo(random(30) - 15, random(30) - 15)
---     cut._x = b2._x
---     cut._y = b2._y
---     cut.vx = math.random() * 16 - 8
---     cut.vy = math.random() * 16 - 8
---     cut.rotspeed = math.random(6) - 3
---     cut.onEnterFrame = function()
---       this._x = this._x + this.vx
---       this._y = this._y + this.vy
---       this._rotation = this._rotation + this.rotspeed
---       this._alpha = this._alpha - 0.5
---
---       if this._alpha < 1 then
---         -- delete this.onEnterFrame
---         this.removeclip()
---       end
---     end
---   end
--- end
 
 function crank(change, acceleratedChange)
     l.deg = l.deg + acceleratedChange / 4
@@ -479,7 +408,16 @@ end
 function gimme.update()
     playdate.graphics.sprite.update()
     playdate.timer.updateTimers()
+
     fsm()
+    for z = #zeroes,1,-1 do
+        local zero = zeroes[z]
+        zero:moveBy(zero.vx, zero.vy)
+        if zero.y > 250 + zero.r then
+            zero:remove()
+            table.remove(zeroes, z)
+        end
+    end
 end
 
 function save_state()
