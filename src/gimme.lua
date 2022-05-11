@@ -8,7 +8,6 @@ local spr <const> = playdate.graphics.sprite
 local white <const> = playdate.graphics.kColorWhite
 local black <const> = playdate.graphics.kColorBlack
 
-
 -- Helper functions
 local function rad(deg)
     return deg * 0.017453292519943295
@@ -58,13 +57,17 @@ local shooter_image = img.new( 2 * ballSize, 2 * ballSize)
 local shooter_sprite = spr.new( shooter_image )
 
 local image_background = img.new("images/background")
+local image_sidebar = {}
+local sidebar_sprite = nil
 local image_tripod = img.new("images/tripod")
 local image_gameover = img.new("images/gameover250")
 local goscreen = spr.new( image_gameover )
 goscreen:setZIndex(500)
 local image_logo = img.new("images/logo")
 local title_sprite = spr.new( image_logo )
+local background = nil
 
+local small_font = playdate.graphics.font.new("fonts/gimme-small")
 local digit_font = playdate.graphics.font.new("fonts/gimme-digits")
 local score_image = img.new( 40, 15, white)
 local score_sprite = spr.new ( score_image )
@@ -76,13 +79,6 @@ hiscore_sprite:moveTo(362, 155)
 hiscore_sprite:add()
 
 local tripod = spr.new( image_tripod )
-local background = spr.setBackgroundDrawingCallback(
-    function( x, y, width, height )
-        gfx.setClipRect( x, y, width, height )
-        image_background:draw( 0, 0 )
-        gfx.clearClipRect()
-    end
-)
 
 local function draw_shooter(image)
     gfx.lockFocus(image)
@@ -100,6 +96,34 @@ local function draw_score(image, num)
         gfx.setColor(black)
         digit_font:drawTextAligned(num, 20, 0, kTextAlignment.center)
     gfx.unlockFocus()
+end
+
+local function draw_sidebar(image)
+    local b = [[GIMME
+FRICTION
+BABY
+
+
+CONCEPT
+CODE
+DESIGN
+WOUTER
+VISSER
+
+MUSICSAMPLE
+WE VS DEATH
+
+PLAYDATE
+PORT
+PETER
+TRIPP
+]]
+    gfx.lockFocus(image)
+        gfx.clear(white)
+        gfx.setColor(black)
+        small_font:drawTextAligned(b, 37, 5, kTextAlignment.center, 2)
+    gfx.unlockFocus()
+    return image
 end
 
 local function update_score(s)
@@ -469,7 +493,6 @@ function load_state(state)
 end
 
 function setup()
-    -- playdate.datastore.delete("state")
     if playdate.buttonIsPressed("B") then
         playdate.datastore.delete("state")
     else
@@ -481,6 +504,13 @@ function setup()
             title_sprite:add()
         end
     end
+    background = spr.setBackgroundDrawingCallback(
+        function( x, y, width, height )
+            gfx.setClipRect( x, y, width, height )
+            image_background:draw( 0, 0 )
+            gfx.clearClipRect()
+        end
+    )
     gfx.setColor(black)
     update_score(score)
     newball()
@@ -493,6 +523,29 @@ function setup()
     update_shooter()
     shooter_sprite:setZIndex(201)
     shooter_sprite:add()
+
+
+    local sidebar_x = 75
+    image_sidebar = {
+        tribute=    img.new("images/sidebar1"),
+        credits=    draw_sidebar( img.new( sidebar_x, screenY ) ),
+    }
+    sidebar_sprite = spr.new( image_sidebar )
+    local sidebar_callbacks = {}
+    sidebar_callbacks.credits = function()
+        sidebar_sprite:setImage( image_sidebar.credits )
+        playdate.getSystemMenu():removeAllMenuItems()
+        playdate.getSystemMenu():addMenuItem("tribute", sidebar_callbacks.tribute)
+    end
+    sidebar_callbacks.tribute = function()
+        sidebar_sprite:setImage( image_sidebar.tribute )
+        playdate.getSystemMenu():removeAllMenuItems()
+        playdate.getSystemMenu():addMenuItem("credits", sidebar_callbacks.credits)
+    end
+    sidebar_callbacks.tribute()
+    sidebar_sprite:setCenter(0,0)
+    sidebar_sprite:moveTo(0,0)
+    sidebar_sprite:add()
 
     sound_music:setVolume(0.1)
     sound_music:play(9999)

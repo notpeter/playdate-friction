@@ -1,7 +1,7 @@
-name=gimmefriction
-author=Notpeter
+name=Gimme Friction Baby
+author=Peter Tripp
 description=A Tribute to Gimme Friction Baby
-bundleID=net.notpeter.gimme
+bundleID=net.notpeter.gimmefriction
 version=1.0.0
-imagePath=images/card.png
-buildNumber=8
+imagePath=images/loader
+buildNumber=13
