@@ -1,7 +1,7 @@
 name=Gimme Friction Baby
 author=Peter Tripp
 description=A Tribute to Gimme Friction Baby
-bundleID=net.notpeter.gimmefriction
-version=1.0.2
+bundleID=net.notpeter.gimmefrictionbaby
+version=1.1.2
 imagePath=images/loader
-buildNumber=16
+buildNumber=101020

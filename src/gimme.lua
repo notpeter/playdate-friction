@@ -298,7 +298,7 @@ function calc()
     if(wallBottom - b._y < nd) then
         nd = wallBottom - b._y
         if nd < 0 then
-            ubarray[#ubarray] = b
+            ubarray[#ubarray+1] = b
             table.remove(barray, #barray)
             nd = math.abs(nd)
         end
@@ -398,6 +398,10 @@ function restore()
     for j = 1,#barray do
         barray[j]:remove()
     end
+    for k = 1,#ubarray do
+        ubarray[k]:remove()
+    end
+    ubarray = {}
     barray = {}
     i = 10
     n = -1
