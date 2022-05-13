@@ -70,7 +70,7 @@ end
 
 function loadImage(diameter, cnt)
     -- Note returns nil file not found. Which won't get stored in the Lua tbl.
-    local filename = string.format("images/balls/%s-%s", diameter, cnt)
+    local filename = string.format("images/ball_%s-%s", diameter, cnt)
     local i = img.new( filename )
     return i
 end

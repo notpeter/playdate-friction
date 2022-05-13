@@ -318,7 +318,7 @@ function grow2()
         -- this is arbitrary because of the resolution of our display (400x240).
         -- smaller balls are rare (only when close to the bottom line)
         -- and have images drawn by hand. 7x7 (r=3.5) is the smallest we can do
-        -- so I've named the 7x7 as the 6x6 (images/balls/6-{3,2,1,0}.png)
+        -- so I've named the 7x7 as the 6x6 (images/balls_6-{3,2,1,0}.png)
         -- which will be used here.
         if nd < 3 then
             nd = 3
