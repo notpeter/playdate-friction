@@ -7,6 +7,7 @@ local img <const> = playdate.graphics.image
 local spr <const> = playdate.graphics.sprite
 local white <const> = playdate.graphics.kColorWhite
 local black <const> = playdate.graphics.kColorBlack
+local clear <const> = playdate.graphics.kColorClear
 
 -- Helper functions
 local function rad(deg)
@@ -20,10 +21,11 @@ end
 -- Constants
 local screenX <const> = 400
 local screenY <const> = 240
-local ballSize <const> = 9 -- was 10
+local ballRadius <const> = 9 -- was 10
+local ballDiameter <const> = ballRadius * 2
 local startX <const> = screenX // 2 -- was 320
 local startY <const> = screenY - 20 -- was 450
-local wallLeft <const> = 75 + ballSize
+local wallLeft <const> = 75 + ballRadius
 local wallRight <const> = screenX - wallLeft
 local wallBottom <const> = screenY - 62
 local wallTop <const> = 0
@@ -36,6 +38,8 @@ local nd = 10000            -- Next closest ball distance
 local b = nil               -- Currently active Ball {lx,ly,r,vx,vy,f,m,_rotation}
 local l = {deg=182, mov=2}  -- Shooter state and step
 local arrow = {}            -- Rotating shooter {_x, _y, _rotation}
+local show_guide = false
+local show_credits = false
 
 barray = {}
 ubarray = {}
@@ -52,9 +56,12 @@ local sound_crack = playdate.sound.sampleplayer.new("sound/crack")
 local sound_shoot = playdate.sound.sampleplayer.new("sound/shoot")
 local sound_wall = playdate.sound.sampleplayer.new("sound/wall")
 
+local line_length = 200
 local ball_images = gimme.balls
-local shooter_image = img.new( 2 * ballSize, 2 * ballSize)
+local shooter_image = img.new(ballDiameter, ballDiameter)
 local shooter_sprite = spr.new( shooter_image )
+local guide_image = img.new(line_length, ballDiameter + 1)
+local guide_sprite = spr.new( guide_image )
 
 local image_background = img.new("images/background")
 local image_sidebar = {}
@@ -77,15 +84,23 @@ local hiscore_image = img.new( 45, 15, white)
 local hiscore_sprite = spr.new ( hiscore_image )
 hiscore_sprite:moveTo(362, 155)
 hiscore_sprite:add()
-
 local tripod = spr.new( image_tripod )
 
 local function draw_shooter(image)
     gfx.lockFocus(image)
         playdate.graphics.setColor(white)
-        playdate.graphics.fillCircleInRect(0, 0, 2 * ballSize, 2 * ballSize)
+        playdate.graphics.fillCircleInRect(0, 0, ballDiameter, ballDiameter)
         playdate.graphics.setColor(black)
-        playdate.graphics.drawCircleInRect(0, 0, 2 * ballSize, 2 * ballSize)
+        playdate.graphics.drawCircleInRect(0, 0, ballDiameter, ballDiameter)
+    gfx.unlockFocus()
+    return image
+end
+
+local function draw_guide(image)
+    gfx.lockFocus(image)
+        playdate.graphics.setColor(white)
+        playdate.graphics.drawLine(0, 0, line_length, 0)
+        playdate.graphics.drawLine(0, ballDiameter, line_length, ballDiameter)
     gfx.unlockFocus()
     return image
 end
@@ -154,17 +169,17 @@ end
 
 function newball()
     i = i + 1
-    b = spr.new( next_image(ballSize, 3) )
+    b = spr.new( next_image(ballRadius, 3) )
     b:moveTo( startX, startY )
     b:setVisible(true)
     b:setZIndex(100)
     b:add()
-    b._xscale = ballSize
-    b._yscale = ballSize
+    b._xscale = ballRadius
+    b._yscale = ballRadius
     b._x = startX
     b._y = startY
-    b.r = ballSize    -- radius
-    b.vx = 0          -- velocity
+    b.r = ballRadius
+    b.vx = 0   -- velocity
     b.vy = 0
     b.m = 1    -- mass?
     b.n = 3    -- frame number 1-4 (3,2,1,0)
@@ -173,8 +188,8 @@ end
 
 function update_shooter()
     local angle_rad = rad(l.deg)
-    b.lx = math.cos(angle_rad) * (3.1 * ballSize) + startX
-    b.ly = math.sin(angle_rad) * (3.1 * ballSize) + startY
+    b.lx = math.cos(angle_rad) * (3.1 * ballRadius) + startX
+    b.ly = math.sin(angle_rad) * (3.1 * ballRadius) + startY
     arrow._x = b.lx
     arrow._y = b.ly
     -- l  -- line = {startX, startY, b.lx, b.ly}
@@ -182,6 +197,8 @@ function update_shooter()
     local dy = b._y - b.ly
     arrow._rotation = deg(math.atan2(dy, dx)) -90
     shooter_sprite:moveTo(arrow._x, arrow._y)
+    guide_sprite:moveTo(arrow._x, arrow._y)
+    guide_sprite:setRotation(l.deg)
 end
 
 function shooter()
@@ -524,9 +541,12 @@ function setup()
     tripod:setZIndex(200)
 
     draw_shooter(shooter_image)
+    draw_guide(guide_image)
     update_shooter()
     shooter_sprite:setZIndex(201)
     shooter_sprite:add()
+    guide_sprite:setCenter(0,0.5)
+    guide_sprite:add()
 
 
     local sidebar_x = 75
@@ -534,19 +554,43 @@ function setup()
         tribute=    img.new("images/sidebar1"),
         credits=    draw_sidebar( img.new( sidebar_x, screenY ) ),
     }
+
     sidebar_sprite = spr.new( image_sidebar )
     local sidebar_callbacks = {}
-    sidebar_callbacks.credits = function()
-        sidebar_sprite:setImage( image_sidebar.credits )
-        playdate.getSystemMenu():removeAllMenuItems()
-        playdate.getSystemMenu():addMenuItem("tribute", sidebar_callbacks.tribute)
+    sidebar_callbacks.toggleGuide = function()
+        show_guide = not show_guide
+        guide_sprite:setVisible(show_guide)
+        sidebar_callbacks.updateDisplay()
     end
-    sidebar_callbacks.tribute = function()
-        sidebar_sprite:setImage( image_sidebar.tribute )
-        playdate.getSystemMenu():removeAllMenuItems()
-        playdate.getSystemMenu():addMenuItem("credits", sidebar_callbacks.credits)
+    sidebar_callbacks.toggleTribute = function()
+        show_credits = not show_credits
+        sidebar_callbacks.updateDisplay()
     end
-    sidebar_callbacks.tribute()
+    sidebar_callbacks.updateDisplay = function()
+        local guide_label
+        local tribute_label
+        local sidebar_image
+        if show_guide == true then
+            guide_label = "hide guide"
+        else
+            guide_label = "show guide"
+        end
+        if show_credits == true then
+            tribute_label = "tribute"
+            sidebar_image = image_sidebar.credits
+        else
+            tribute_label = "credits"
+            sidebar_image = image_sidebar.tribute
+        end
+
+        sidebar_sprite:setImage(sidebar_image)
+        playdate.getSystemMenu():removeAllMenuItems()
+        playdate.getSystemMenu():addMenuItem(tribute_label, sidebar_callbacks.toggleTribute)
+        playdate.getSystemMenu():addMenuItem(guide_label, sidebar_callbacks.toggleGuide)
+    end
+
+
+    sidebar_callbacks.updateDisplay()
     sidebar_sprite:setCenter(0,0)
     sidebar_sprite:moveTo(0,0)
     sidebar_sprite:add()
