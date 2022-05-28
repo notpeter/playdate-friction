@@ -20,13 +20,38 @@ end
 -- Constants
 local screenX <const> = 400
 local screenY <const> = 240
-local ballSize <const> = 9 -- was 10
-local startX <const> = screenX // 2 -- was 320
-local startY <const> = screenY - 20 -- was 450
-local wallLeft <const> = 75 + ballSize
-local wallRight <const> = screenX - wallLeft
-local wallBottom <const> = screenY - 62
-local wallTop <const> = 0
+-- Variable board shapes
+local ballSizes
+local velocity
+local startXs
+local startYs
+local wallLefts
+local wallRights
+local wallBottoms
+local wallTops
+
+local function mode_playdate()
+    ballSize = 9
+    velocity = 3.5
+    startX = screenX // 2 -- was 320
+    startY = screenY - 20 -- was 450
+    wallLeft = 75 + ballSize
+    wallRight = screenX - wallLeft
+    wallBottom = screenY - 62
+    wallTop = 0
+end
+local function mode_classic()
+    local x, y = 200, 240 -- original was 400x480
+    ballSize = 9
+    velocity = 4
+    startX = screenX // 2 -- was 320
+    startY = screenY - 20 -- was 450
+    wallLeft = 100 + ballSize
+    wallRight = screenX - wallLeft
+    wallBottom = screenY - 62
+    wallTop = 0
+end
+mode_classic()
 
 -- GLOBAL VARIABLES
 local i = 10                -- ? number of balls
@@ -210,8 +235,8 @@ function shootnow()
         title_sprite:setVisible(false)
     end
     sound_shoot:play()
-    b.vx = (- (b.lx - startX)) / 3.5
-    b.vy = (- (b.ly - startY)) / 3.5
+    b.vx = (- (b.lx - startX)) / velocity
+    b.vy = (- (b.ly - startY)) / velocity
     fsm = moveball
     playdate.AButtonDown = nil
     playdate.upButtonDown = nil
@@ -456,6 +481,10 @@ end
 function gimme.update()
     playdate.graphics.sprite.update()
     playdate.timer.updateTimers()
+
+    gfx.setColor(white)
+    gfx.drawLine(100, 0, 100, screenY)
+    gfx.drawLine(300, 0, 300, screenY)
 
     fsm()
     for z = #zeroes,1,-1 do
