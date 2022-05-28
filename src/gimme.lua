@@ -42,7 +42,7 @@ local function mode_playdate()
 end
 local function mode_classic()
     local x, y = 200, 240 -- original was 400x480
-    ballSize = 9
+    ballSize = 5          -- original was 10
     velocity = 4
     startX = screenX // 2 -- was 320
     startY = screenY - 20 -- was 450
@@ -198,8 +198,8 @@ end
 
 function update_shooter()
     local angle_rad = rad(l.deg)
-    b.lx = math.cos(angle_rad) * (3.1 * ballSize) + startX
-    b.ly = math.sin(angle_rad) * (3.1 * ballSize) + startY
+    b.lx = math.cos(angle_rad) * 30 + startX
+    b.ly = math.sin(angle_rad) * 30 + startY
     arrow._x = b.lx
     arrow._y = b.ly
     -- l  -- line = {startX, startY, b.lx, b.ly}
