@@ -34,7 +34,7 @@ local friction = 0.975      -- coefficient of friction
 local n = -1                -- Next closest ball (num)
 local nd = 10000            -- Next closest ball distance
 local b = nil               -- Currently active Ball {lx,ly,r,vx,vy,f,m,_rotation}
-local l = {deg=182, mov=2}  -- Shooter state and step
+local l = {deg=180, mov=2}  -- Shooter state and step
 local arrow = {}            -- Rotating shooter {_x, _y, _rotation}
 
 barray = {}
@@ -185,11 +185,17 @@ function update_shooter()
 end
 
 function shooter()
+    function _clamp(num, min, max)
+        if num > max then return max end
+        if num < min then return min end
+        return num
+    end
     playdate.AButtonDown = shootnow
     playdate.upButtonDown = shootnow
     if playdate.isCrankDocked() then
         if l.deg > 360 or l.deg < 180 then
             l.mov = -1 * l.mov
+            l.deg = _clamp(l.deg, 180, 360)
         end
         -- original game only supported 0,180; step=2.
         -- this rand term at the end keeps things interesting.
