@@ -134,16 +134,6 @@ local function update_score(s)
     draw_score(hiscore_image, hiscore)
 end
 
-local function next_image(r, n)
-    local im = ball_images[n][4]
-    for size, image in pairs(ball_images[n]) do
-        if r >= size then
-            im = image
-        end
-    end
-    return im
-end
-
 
 -- local title_screen = playdate.graphics.sprite.new(320, 200)
 local function ball_str(b)
@@ -152,7 +142,7 @@ end
 
 function newball()
     i = i + 1
-    b = spr.new( next_image(ballSize, 3) )
+    b = spr.new( get_ball(ballSize, 3) )
     b:moveTo( startX, startY )
     b:setVisible(true)
     b:setZIndex(100)
@@ -314,7 +304,7 @@ function grow2()
     local _loc1_ = news - b._xscale
     b._xscale = b._xscale + _loc1_ / 5
     b._yscale = b._yscale + _loc1_ / 5
-    local img = next_image(b._xscale, b.n)
+    local img = get_ball(b._xscale, b.n)
     b:setImage(img)
     if _loc1_ < 1 then
         b._xscale = news
@@ -328,7 +318,7 @@ function grow2()
             nd = 3
         end
         b.r = nd
-        b:setImage(next_image(b.r, b.n))
+        b:setImage(get_ball(b.r, b.n))
         newball()
         fsm = shooter
         nd = 10000
@@ -350,7 +340,7 @@ function checkColl(b1, b2)
         b1._y = b1._y + between * yratio
         b2.n = b2.n - 1
         sound_crack:play()
-        b2:setImage( next_image(b2.r, b2.n) )
+        b2:setImage( get_ball(b2.r, b2.n) )
 
         local atan2 = math.atan2(ydist, xdist)
         local cosa = math.cos(atan2)
@@ -370,7 +360,7 @@ function checkColl(b1, b2)
         sind = sina * diff
         if(b2.n == 0) then
             update_score(score + 1)
-            b2:setImage( next_image(b2.r, b2.n))
+            b2:setImage( get_ball(b2.r, b2.n))
             zeroes[#zeroes+1] = b2
             b2.vx = 0
             b2.vy = 5
@@ -486,7 +476,7 @@ end
 
 function load_state(state)
     for _, _ball in ipairs(state["barray"]) do
-        local _b = spr.new( next_image(_ball.r, _ball.n) )
+        local _b = spr.new( get_ball(_ball.r, _ball.n) )
         _b:moveTo(_ball._x, _ball._y)
         _b:setZIndex(100)
         _b:add()

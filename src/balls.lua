@@ -3,9 +3,9 @@ local img <const> = playdate.graphics.image
 local white <const> = playdate.graphics.kColorWhite
 local black <const> = playdate.graphics.kColorBlack
 
-local gimme_balls = nil
+gimme_balls = nil
 
-function draw3(radius)
+local function draw3(radius)
     local right = 1.25 * radius
     local left = .75 * radius
     local left_mid = .85 * radius
@@ -23,7 +23,7 @@ function draw3(radius)
     gfx.drawLine(right, bottom, left, bottom)   -- bottom
 end
 
-function draw2(radius)
+local function draw2(radius)
     local right = 1.25 * radius
     local left = .75 * radius
     local middle = radius
@@ -41,7 +41,7 @@ function draw2(radius)
     gfx.drawLine(right, bottom, left, bottom)   -- bottom
 end
 
-function draw1(radius)
+local function draw1(radius)
     local middle = radius
     local top = .5 * radius
     local bottom = 1.5 * radius
@@ -53,7 +53,7 @@ function draw1(radius)
     gfx.drawLine(middle, top, middle, bottom)
 end
 
-function draw0(radius)
+local function draw0(radius)
     local right = 1.25 * radius
     local left = .75 * radius
     local top = .5 * radius
@@ -67,14 +67,14 @@ function draw0(radius)
     gfx.drawLine(right, bottom, right, top)
 end
 
-function loadImage(diameter, cnt)
+local function loadImage(diameter, cnt)
     -- Note returns nil file not found. Which won't get stored in the Lua tbl.
     local filename = string.format("images/ball_%s-%s", diameter, cnt)
     local i = img.new( filename )
     return i
 end
 
-function makeImage(radius, draw_func)
+local function makeImage(radius, draw_func)
     local image = img.new(radius * 2, radius * 2)
     gfx.lockFocus(image)
         draw_func(radius)
@@ -82,22 +82,32 @@ function makeImage(radius, draw_func)
     return image
 end
 
+local draw_funcs = {[0]=draw0, [1]=draw1, [2]=draw2, [3]=draw3}
+function get_ball(r, n)
+    local rint = math.floor(r)
+    if rint < 4 then
+        rint = 4
+    end
+    local ball = gimme_balls[n][rint]
+    if not ball then
+        ball = makeImage(rint, draw_funcs[n])
+        gimme_balls[n][rint] = ball
+    end
+    return ball
+end
+
 function balls_setup()
     if gimme_balls then
         return gimme_balls
-    else
-        gimme_balls = {}
     end
-    local min_size, max_size = 1, 175
+    gimme_balls = {[0]={}, [1]={}, [2]={}, [3]={}}
     gfx.setLineCapStyle(playdate.graphics.kLineCapStyleSquare)
-    for n, draw_func in pairs({[0]=draw0, [1]=draw1, [2]=draw2, [3]=draw3}) do
-        gimme_balls[n] = {}
-        for radius = min_size,max_size do
-            if radius >= 9 then
-                gimme_balls[n][radius] = makeImage(radius, draw_func)
-            else
-                gimme_balls[n][radius] = loadImage(2 * radius, n)
-            end
+    n = 3 -- only load 3s. 0/1/2 generated on-demand during update()
+    for radius = 1,90 do
+        if radius >= 9 then
+            gimme_balls[n][radius] = makeImage(radius, draw3)
+        else
+            gimme_balls[n][radius] = loadImage(2 * radius, n)
         end
     end
     return gimme_balls
