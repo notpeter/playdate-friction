@@ -1,5 +1,3 @@
-gimme = gimme or {}
-
 local geo <const> = playdate.geometry
 local gfx <const> = playdate.graphics
 local ani <const> = playdate.graphics.animator
@@ -77,7 +75,7 @@ local sound_crack = playdate.sound.sampleplayer.new("sound/crack")
 local sound_shoot = playdate.sound.sampleplayer.new("sound/shoot")
 local sound_wall = playdate.sound.sampleplayer.new("sound/wall")
 
-local ball_images = gimme.balls
+local ball_images = {}
 local shooter_image = img.new( 2 * ballSize, 2 * ballSize)
 local shooter_sprite = spr.new( shooter_image )
 
@@ -478,7 +476,7 @@ function playdate.crankUndocked()
     playdate.cranked = crank
 end
 
-function gimme.update()
+function gimme_update()
     playdate.graphics.sprite.update()
     playdate.timer.updateTimers()
 
@@ -531,7 +529,8 @@ function load_state(state)
     score = state["score"]
 end
 
-function setup()
+function gimme_setup()
+    ball_images = balls_setup()
     if playdate.buttonIsPressed("B") then
         playdate.datastore.delete("state")
     else
@@ -597,6 +596,3 @@ function setup()
         playdate.cranked = crank
     end
 end
-
-setup()
-
