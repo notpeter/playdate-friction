@@ -3,8 +3,7 @@ local img <const> = playdate.graphics.image
 local white <const> = playdate.graphics.kColorWhite
 local black <const> = playdate.graphics.kColorBlack
 
-gimme = gimme or {}
-gimme.balls = {}
+local gimme_balls = nil
 
 function draw3(radius)
     local right = 1.25 * radius
@@ -83,19 +82,23 @@ function makeImage(radius, draw_func)
     return image
 end
 
-function setup()
+function balls_setup()
+    if gimme_balls then
+        return gimme_balls
+    else
+        gimme_balls = {}
+    end
     local min_size, max_size = 1, 175
     gfx.setLineCapStyle(playdate.graphics.kLineCapStyleSquare)
     for n, draw_func in pairs({[0]=draw0, [1]=draw1, [2]=draw2, [3]=draw3}) do
-        gimme.balls[n] = {}
+        gimme_balls[n] = {}
         for radius = min_size,max_size do
             if radius >= 9 then
-                gimme.balls[n][radius] = makeImage(radius, draw_func)
+                gimme_balls[n][radius] = makeImage(radius, draw_func)
             else
-                gimme.balls[n][radius] = loadImage(2 * radius, n)
+                gimme_balls[n][radius] = loadImage(2 * radius, n)
             end
         end
     end
+    return gimme_balls
 end
-
-setup()

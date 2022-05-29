@@ -9,6 +9,7 @@ import "balls"
 import "gimme"
 
 local function setup()
-    playdate.update = gimme.update
+    gimme_setup()
+    playdate.update = gimme_update
 end
 setup()
