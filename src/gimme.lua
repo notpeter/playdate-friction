@@ -87,7 +87,8 @@ local sidebar_sprite = nil
 local image_tripod = img.new(42, 42)
 gfx.lockFocus(image_tripod)
     gfx.setColor(white)
-    gfx.fillCircleAtPoint(20.5,30, 20)
+    gfx.fillCircleAtPoint(21, 30, 16)
+    gfx.fillRect(5, 25, 32, 42-25)
 gfx.unlockFocus()
 
 local image_gameover = img.new("images/gameover250")
@@ -602,7 +603,7 @@ function gimme_setup()
     end
     sidebar_callbacks.tribute()
     sidebar_sprite:setCenter(0,0)
-    sidebar_sprite:moveTo((wallLeft - image_sidebar.tribute.width)//2,0)
+    sidebar_sprite:moveTo((wallLeft - image_sidebar.tribute.width)//2 - 3,0)
     sidebar_sprite:add()
 
     sound_music:setVolume(0.1)
