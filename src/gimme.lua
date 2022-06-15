@@ -21,8 +21,8 @@ local screenY <const> = 240
 -- Variable board shapes
 local ballSizes
 local velocity
-local startXs
-local startYs
+local startX
+local startY
 local wallLefts
 local wallRights
 local wallBottoms
@@ -41,12 +41,12 @@ end
 local function mode_classic()
     local x, y = 200, 240 -- original was 400x480
     ballSize = 5          -- original was 10
-    velocity = 4
+    velocity = 3.225
     startX = screenX // 2 -- was 320
-    startY = screenY - 20 -- was 450
+    startY = screenY - 10 -- was 450
     wallLeft = 100 + ballSize
     wallRight = screenX - wallLeft
-    wallBottom = screenY - 62
+    wallBottom = screenY - 42
     wallTop = 0
 end
 mode_classic()
@@ -79,10 +79,17 @@ local ball_images = {}
 local shooter_image = img.new( 2 * ballSize, 2 * ballSize)
 local shooter_sprite = spr.new( shooter_image )
 
-local image_background = img.new("images/background")
+-- local image_background = img.new("images/background")
+local image_background = img.new(screenX, screenY)
 local image_sidebar = {}
 local sidebar_sprite = nil
-local image_tripod = img.new("images/tripod")
+-- local image_tripod = img.new("images/tripod")
+local image_tripod = img.new(42, 42)
+gfx.lockFocus(image_tripod)
+    gfx.setColor(white)
+    gfx.fillCircleAtPoint(20.5,30, 20)
+gfx.unlockFocus()
+
 local image_gameover = img.new("images/gameover250")
 local goscreen = spr.new( image_gameover )
 goscreen:setZIndex(500)
@@ -144,7 +151,7 @@ TRIPP
     gfx.lockFocus(image)
         gfx.clear(white)
         gfx.setColor(black)
-        small_font:drawTextAligned(b, 37, 5, kTextAlignment.center, 2)
+        small_font:drawTextAligned(b, wallLeft // 2, 5, kTextAlignment.center, 2)
     gfx.unlockFocus()
     return image
 end
@@ -161,9 +168,11 @@ end
 
 local function next_image(r, n)
     local im = ball_images[n][4]
+    local new_size = 4
     for size, image in pairs(ball_images[n]) do
         if r >= size then
             im = image
+            new_size = size
         end
     end
     return im
@@ -196,8 +205,9 @@ end
 
 function update_shooter()
     local angle_rad = rad(l.deg)
-    b.lx = math.cos(angle_rad) * 30 + startX
-    b.ly = math.sin(angle_rad) * 30 + startY
+    local radius = 25
+    b.lx = math.cos(angle_rad) * radius + startX
+    b.ly = math.sin(angle_rad) * radius + startY
     arrow._x = b.lx
     arrow._y = b.ly
     -- l  -- line = {startX, startY, b.lx, b.ly}
@@ -339,8 +349,10 @@ function grow2()
     local _loc1_ = news - b._xscale
     b._xscale = b._xscale + _loc1_ / 5
     b._yscale = b._yscale + _loc1_ / 5
+
     local img = next_image(b._xscale, b.n)
     b:setImage(img)
+    -- do the above, until we're within 1pixel of the new size.
     if _loc1_ < 1 then
         b._xscale = news
         b._yscale = news
@@ -477,12 +489,9 @@ function playdate.crankUndocked()
 end
 
 function gimme_update()
-    playdate.graphics.sprite.update()
     playdate.timer.updateTimers()
-
-    gfx.setColor(white)
-    gfx.drawLine(100, 0, 100, screenY)
-    gfx.drawLine(300, 0, 300, screenY)
+    playdate.graphics.sprite.update()
+    -- playdate.drawFPS()
 
     fsm()
     for z = #zeroes,1,-1 do
@@ -542,6 +551,17 @@ function gimme_setup()
             title_sprite:add()
         end
     end
+    gfx.lockFocus(image_background)
+        local left_x = wallLeft - ballSize
+        local right_x = wallRight + ballSize
+        gfx.setColor(white)
+        gfx.fillRect(0, 0, screenX, screenY)
+        gfx.setColor(black)
+        gfx.fillRect(left_x, 0, right_x - left_x, screenY)
+        gfx.setColor(white)
+        gfx.drawLine(0, wallBottom, screenX, wallBottom)
+    gfx.unlockFocus()
+
     background = spr.setBackgroundDrawingCallback(
         function( x, y, width, height )
             gfx.setClipRect( x, y, width, height )
@@ -552,8 +572,8 @@ function gimme_setup()
     gfx.setColor(black)
     update_score(score)
     newball()
-
-    tripod:moveTo(startX, screenY - 20)
+    tripod:setCenter(0.5,1)
+    tripod:moveTo(199, screenY)
     tripod:add()
     tripod:setZIndex(200)
 
@@ -563,7 +583,7 @@ function gimme_setup()
     shooter_sprite:add()
 
 
-    local sidebar_x = 75
+    local sidebar_x = wallLeft - ballSize
     image_sidebar = {
         tribute=    img.new("images/sidebar1"),
         credits=    draw_sidebar( img.new( sidebar_x, screenY ) ),
@@ -582,7 +602,7 @@ function gimme_setup()
     end
     sidebar_callbacks.tribute()
     sidebar_sprite:setCenter(0,0)
-    sidebar_sprite:moveTo(0,0)
+    sidebar_sprite:moveTo((wallLeft - image_sidebar.tribute.width)//2,0)
     sidebar_sprite:add()
 
     sound_music:setVolume(0.1)

@@ -93,7 +93,7 @@ function balls_setup()
     for n, draw_func in pairs({[0]=draw0, [1]=draw1, [2]=draw2, [3]=draw3}) do
         gimme_balls[n] = {}
         for radius = min_size,max_size do
-            if radius >= 9 then
+            if radius >= 9 then -- custom drawn balls are up to 16x16 (radius=8)
                 gimme_balls[n][radius] = makeImage(radius, draw_func)
             else
                 gimme_balls[n][radius] = loadImage(2 * radius, n)
