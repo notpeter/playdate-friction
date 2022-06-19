@@ -1,3 +1,4 @@
+local geo <const> = playdate.geometry
 local gfx <const> = playdate.graphics
 local img <const> = playdate.graphics.image
 local white <const> = playdate.graphics.kColorWhite
@@ -101,4 +102,30 @@ function balls_setup()
         end
     end
     return gimme_balls
+end
+
+function shooter_draw(diameter)
+    local d = diameter - 1
+    local center = geo.point.new(diameter // 2, diameter // 2)
+    local l1 = geo.lineSegment.new(0, 0, 0, d)
+    local l2 = geo.lineSegment.new(d, 0, 0, 0)
+    local l3 = geo.lineSegment.new(d, d, d, 0)
+    local t = table.create(181, 0)
+    local at = geo.affineTransform.new()
+    local center = geo.point.new(diameter // 2, diameter // 2)
+    for a = 0,90 do
+        local s = img.new(diameter, diameter)
+        at:reset()
+        at:rotate(a, center)
+        print(a, l2, at:transformedLineSegment(l2))
+        gfx.lockFocus(s)
+            gfx.setColor(white)
+            gfx.drawLine(0, center.y, d, center.y)
+            gfx.drawLine(at:transformedLineSegment(l1))
+            gfx.drawLine(at:transformedLineSegment(l2))
+            gfx.drawLine(at:transformedLineSegment(l3))
+        gfx.unlockFocus()
+        t[a] = s:rotatedImage(a)
+    end
+    return t
 end

@@ -5,7 +5,7 @@ import "CoreLibs/sprites"
 import "CoreLibs/timer"
 import "CoreLibs/animator"
 import "CoreLibs/crank"
-import "balls"
+import "draw"
 import "gimme"
 
 local function setup()

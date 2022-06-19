@@ -50,6 +50,7 @@ local function mode_classic()
     wallTop = 0
 end
 mode_classic()
+-- mode_playdate()
 
 -- GLOBAL VARIABLES
 local i = 10                -- ? number of balls
@@ -76,8 +77,6 @@ local sound_shoot = playdate.sound.sampleplayer.new("sound/shoot")
 local sound_wall = playdate.sound.sampleplayer.new("sound/wall")
 
 local ball_images = {}
-local shooter_image = img.new( 2 * ballSize, 2 * ballSize)
-local shooter_sprite = spr.new( shooter_image )
 
 -- local image_background = img.new("images/background")
 local image_background = img.new(screenX, screenY)
@@ -97,6 +96,7 @@ goscreen:setZIndex(500)
 local image_logo = img.new("images/logo")
 local title_sprite = spr.new( image_logo )
 local background = nil
+local shooter_sprite = nil
 
 local small_font = playdate.graphics.font.new("fonts/gimme-small")
 local digit_font = playdate.graphics.font.new("fonts/gimme-digits")
@@ -111,9 +111,14 @@ hiscore_sprite:add()
 
 local tripod = spr.new( image_tripod )
 
-local function draw_shooter(image)
+local function draw_shooter(diameter)
+    local image = img.new( diameter, diameter)
+    local d = diameter - 1
     gfx.lockFocus(image)
         playdate.graphics.setColor(white)
+        -- playdate.graphics.drawLine(0, 0, 0, d)
+        -- playdate.graphics.drawLine(0, 0, d, 0)
+        -- playdate.graphics.drawLine(d, d, d, 0)
         playdate.graphics.fillCircleInRect(0, 0, 2 * ballSize, 2 * ballSize)
         playdate.graphics.setColor(black)
         playdate.graphics.drawCircleInRect(0, 0, 2 * ballSize, 2 * ballSize)
@@ -206,16 +211,23 @@ end
 
 function update_shooter()
     local angle_rad = rad(l.deg)
-    local radius = 25
+    local radius = 20
     b.lx = math.cos(angle_rad) * radius + startX
     b.ly = math.sin(angle_rad) * radius + startY
     arrow._x = b.lx
     arrow._y = b.ly
-    -- l  -- line = {startX, startY, b.lx, b.ly}
+    -- l  line = {startX, startY, b.lx, b.ly}
     local dx = b._x - b.lx
     local dy = b._y - b.ly
     arrow._rotation = deg(math.atan2(dy, dx)) -90
+    if math.floor(arrow._rotation) == -270 then
+        arrow._rotation += 360
+    end
+
+    gfx.setColor(black)
+    -- gfx.drawLine(startX, startY, b.lx, b.ly)
     shooter_sprite:moveTo(arrow._x, arrow._y)
+    -- shooter_sprite:setImage(shooter_images[math.floor(arrow._rotation)])
 end
 
 function shooter()
@@ -503,6 +515,7 @@ function gimme_update()
             table.remove(zeroes, z)
         end
     end
+    -- shooter_image:draw(200,0)
 end
 
 function save_state()
@@ -560,7 +573,7 @@ function gimme_setup()
         gfx.setColor(black)
         gfx.fillRect(left_x, 0, right_x - left_x, screenY)
         gfx.setColor(white)
-        gfx.drawLine(0, wallBottom, screenX, wallBottom)
+        gfx.drawLine(0, wallBottom-1, screenX, wallBottom-1)
     gfx.unlockFocus()
 
     background = spr.setBackgroundDrawingCallback(
@@ -578,7 +591,9 @@ function gimme_setup()
     tripod:add()
     tripod:setZIndex(200)
 
-    draw_shooter(shooter_image)
+    -- shooter_images = shooter_draw(ballSize * 2)
+    shooter_image = draw_shooter(ballSize * 2)
+    shooter_sprite = spr.new( shooter_image )
     update_shooter()
     shooter_sprite:setZIndex(201)
     shooter_sprite:add()
