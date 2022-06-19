@@ -4,6 +4,8 @@ local img <const> = playdate.graphics.image
 local white <const> = playdate.graphics.kColorWhite
 local black <const> = playdate.graphics.kColorBlack
 
+local digit_font = playdate.graphics.font.new("fonts/gimme-digits")
+
 local gimme_balls = nil
 
 draw = {}
@@ -108,6 +110,24 @@ function balls_setup()
     return gimme_balls
 end
 
+-- The fixed base of the shooter
+function draw.tripod(tripod_size)
+    local x, y = 42, 42
+    local image_tripod = img.new(x, y)
+    gfx.lockFocus(image_tripod)
+        gfx.setColor(white)
+        gfx.fillCircleAtPoint(x // 2, 30, tripod_size)
+        local rx = x // 2 - tripod_size
+        gfx.fillRect(rx, 25, y - 2 * rx, y-25)
+        -- TODO: Make tall/narrow digit variation instead of this ugly hack.
+        local tracking = math.floor(tripod_size // 20) + 1
+        digit_font:setTracking(tracking)
+        digit_font:drawTextAligned("3210", x // 2, 25, kTextAlignment.center)
+    gfx.unlockFocus()
+    return image_tripod
+end
+
+-- The moving aimer part of the shooter.
 function draw.shooter(diameter)
     local image = img.new( diameter, diameter)
     local d = diameter - 1

@@ -30,9 +30,11 @@ local wallTops
 
 local function mode_playdate()
     ballSize = 9
+    tripod_size = 21
+    shooter_radius = 28
     velocity = 3.5
     startX = screenX // 2 -- was 320
-    startY = screenY - 20 -- was 450
+    startY = screenY - 10 -- was 450
     wallLeft = 75 + ballSize
     wallRight = screenX - wallLeft
     wallBottom = screenY - 62
@@ -41,6 +43,8 @@ end
 local function mode_classic()
     local x, y = 200, 240 -- original was 400x480
     ballSize = 5          -- original was 10
+    tripod_size = 16
+    shooter_radius = 20
     velocity = 3.225
     startX = screenX // 2 -- was 320
     startY = screenY - 10 -- was 450
@@ -83,12 +87,7 @@ local image_background = img.new(screenX, screenY)
 local image_sidebar = {}
 local sidebar_sprite = nil
 -- local image_tripod = img.new("images/tripod")
-local image_tripod = img.new(42, 42)
-gfx.lockFocus(image_tripod)
-    gfx.setColor(white)
-    gfx.fillCircleAtPoint(21, 30, 16)
-    gfx.fillRect(5, 25, 32, 42-25)
-gfx.unlockFocus()
+local image_tripod = draw.tripod(tripod_size)
 
 local image_gameover = img.new("images/gameover250")
 local goscreen = spr.new( image_gameover )
@@ -196,9 +195,8 @@ end
 
 function update_shooter()
     local angle_rad = rad(l.deg)
-    local radius = 20
-    b.lx = math.cos(angle_rad) * radius + startX
-    b.ly = math.sin(angle_rad) * radius + startY
+    b.lx = math.cos(angle_rad) * shooter_radius + startX
+    b.ly = math.sin(angle_rad) * shooter_radius + startY
     arrow._x = b.lx
     arrow._y = b.ly
     -- l  line = {startX, startY, b.lx, b.ly}
@@ -576,7 +574,6 @@ function gimme_setup()
     tripod:add()
     tripod:setZIndex(200)
 
-    -- shooter_images = shooter_draw(ballSize * 2)
     shooter_image = draw.shooter(ballSize * 2)
     shooter_sprite = spr.new( shooter_image )
     update_shooter()
