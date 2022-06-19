@@ -111,21 +111,6 @@ hiscore_sprite:add()
 
 local tripod = spr.new( image_tripod )
 
-local function draw_shooter(diameter)
-    local image = img.new( diameter, diameter)
-    local d = diameter - 1
-    gfx.lockFocus(image)
-        playdate.graphics.setColor(white)
-        -- playdate.graphics.drawLine(0, 0, 0, d)
-        -- playdate.graphics.drawLine(0, 0, d, 0)
-        -- playdate.graphics.drawLine(d, d, d, 0)
-        playdate.graphics.fillCircleInRect(0, 0, 2 * ballSize, 2 * ballSize)
-        playdate.graphics.setColor(black)
-        playdate.graphics.drawCircleInRect(0, 0, 2 * ballSize, 2 * ballSize)
-    gfx.unlockFocus()
-    return image
-end
-
 local function draw_score(image, num)
     image:clear(white)
     gfx.lockFocus(image)
@@ -592,7 +577,7 @@ function gimme_setup()
     tripod:setZIndex(200)
 
     -- shooter_images = shooter_draw(ballSize * 2)
-    shooter_image = draw_shooter(ballSize * 2)
+    shooter_image = draw.shooter(ballSize * 2)
     shooter_sprite = spr.new( shooter_image )
     update_shooter()
     shooter_sprite:setZIndex(201)
