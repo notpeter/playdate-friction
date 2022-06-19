@@ -4,7 +4,11 @@ local img <const> = playdate.graphics.image
 local white <const> = playdate.graphics.kColorWhite
 local black <const> = playdate.graphics.kColorBlack
 
+-- Constants
+local screenX <const> = 400
+local screenY <const> = 240
 local digit_font = playdate.graphics.font.new("fonts/gimme-digits")
+local small_font = playdate.graphics.font.new("fonts/gimme-small")
 
 local gimme_balls = nil
 
@@ -108,6 +112,22 @@ function balls_setup()
         end
     end
     return gimme_balls
+end
+
+function draw.background(left_x, right_x, passing_y)
+    local image_background = img.new(screenX, screenY)
+    gfx.lockFocus(image_background)
+        gfx.setColor(white)
+        gfx.fillRect(0, 0, screenX, screenY)
+        gfx.setColor(black)
+        gfx.fillRect(left_x, 0, right_x - left_x, screenY)
+        gfx.setColor(white)
+        gfx.drawLine(left_x, passing_y, right_x, passing_y)
+        gfx.setColor(black)
+        small_font:drawTextAligned("SCORE", right_x + (screenX - right_x) / 2, 15, kTextAlignment.center)
+        small_font:drawTextAligned("HI\n\nSCORE", right_x + (screenX - right_x) / 2, 110, kTextAlignment.center)
+    gfx.unlockFocus()
+    return image_background
 end
 
 -- The fixed base of the shooter

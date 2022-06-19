@@ -53,8 +53,8 @@ local function mode_classic()
     wallBottom = screenY - 42
     wallTop = 0
 end
-mode_classic()
--- mode_playdate()
+-- mode_classic()
+mode_playdate()
 
 -- GLOBAL VARIABLES
 local i = 10                -- ? number of balls
@@ -83,7 +83,8 @@ local sound_wall = playdate.sound.sampleplayer.new("sound/wall")
 local ball_images = {}
 
 -- local image_background = img.new("images/background")
-local image_background = img.new(screenX, screenY)
+local image_background = draw.background( -- left_x, right_x, passing_line
+    wallLeft - ballSize, wallRight + ballSize, wallBottom-1)
 local image_sidebar = {}
 local sidebar_sprite = nil
 -- local image_tripod = img.new("images/tripod")
@@ -548,16 +549,6 @@ function gimme_setup()
             title_sprite:add()
         end
     end
-    gfx.lockFocus(image_background)
-        local left_x = wallLeft - ballSize
-        local right_x = wallRight + ballSize
-        gfx.setColor(white)
-        gfx.fillRect(0, 0, screenX, screenY)
-        gfx.setColor(black)
-        gfx.fillRect(left_x, 0, right_x - left_x, screenY)
-        gfx.setColor(white)
-        gfx.drawLine(0, wallBottom-1, screenX, wallBottom-1)
-    gfx.unlockFocus()
 
     background = spr.setBackgroundDrawingCallback(
         function( x, y, width, height )
