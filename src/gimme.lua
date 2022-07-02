@@ -29,32 +29,42 @@ local wallBottoms
 local wallTops
 
 local function mode_playdate()
+    sidebar = 75
     ballSize = 9
     tripod_size = 21
     shooter_radius = 28
     velocity = 3.5
     startX = screenX // 2 -- was 320
     startY = screenY - 10 -- was 450
-    wallLeft = 75 + ballSize
-    wallRight = screenX - wallLeft
+    wallLeft = sidebar + ballSize
+    wallRight = screenX - sidebar - ballSize
     wallBottom = screenY - 62
     wallTop = 0
 end
 local function mode_classic()
-    local x, y = 200, 240 -- original was 400x480
+    sidebar = 100
+    -- local x, y = 200, 240 -- original was 400x480
     ballSize = 5          -- original was 10
     tripod_size = 16
     shooter_radius = 20
     velocity = 3.225
     startX = screenX // 2 -- was 320
     startY = screenY - 10 -- was 450
-    wallLeft = 100 + ballSize
-    wallRight = screenX - wallLeft
+    wallLeft = sidebar + ballSize
+    wallRight = screenX - sidebar - ballSize
     wallBottom = screenY - 42
     wallTop = 0
 end
--- mode_classic()
-mode_playdate()
+
+mode = 1
+local function set_mode(mode)
+    if mode % 2 == 0 then
+        mode_classic()
+    else
+        mode_playdate()
+    end
+end
+set_mode(mode)
 
 -- GLOBAL VARIABLES
 local i = 10                -- ? number of balls
@@ -100,13 +110,13 @@ local shooter_sprite = nil
 
 local small_font = playdate.graphics.font.new("fonts/gimme-small")
 local digit_font = playdate.graphics.font.new("fonts/gimme-digits")
-local score_image = img.new( 40, 15, white)
+local score_image = img.new( 45, 15, white)
 local score_sprite = spr.new ( score_image )
-score_sprite:moveTo(362, 50)
+score_sprite:moveTo(screenX - sidebar //2, 50)
 score_sprite:add()
 local hiscore_image = img.new( 45, 15, white)
 local hiscore_sprite = spr.new ( hiscore_image )
-hiscore_sprite:moveTo(362, 155)
+hiscore_sprite:moveTo(screenX - sidebar //2, 155)
 hiscore_sprite:add()
 
 local tripod = spr.new( image_tripod )
@@ -516,6 +526,7 @@ function save_state()
         l = l,
         barray = balls,
         score = score,
+        mode = mode,
     }
     playdate.datastore.write(state, "state")
 end
@@ -533,6 +544,7 @@ function load_state(state)
     end
     b = barray[#barray]
     l = state["l"]
+    mode = state["mode"] or 1
     score = state["score"]
 end
 
@@ -572,10 +584,9 @@ function gimme_setup()
     shooter_sprite:add()
 
 
-    local sidebar_x = wallLeft - ballSize
     image_sidebar = {
         tribute=    img.new("images/sidebar1"),
-        credits=    draw_sidebar( img.new( sidebar_x, screenY ) ),
+        credits=    draw_sidebar( img.new( sidebar, screenY ) ),
     }
     sidebar_sprite = spr.new( image_sidebar )
     local sidebar_callbacks = {}
@@ -583,11 +594,13 @@ function gimme_setup()
         sidebar_sprite:setImage( image_sidebar.credits )
         playdate.getSystemMenu():removeAllMenuItems()
         playdate.getSystemMenu():addMenuItem("tribute", sidebar_callbacks.tribute)
+        playdate.getSystemMenu():addMenuItem("mode", function() mode = (mode + 1) % 2; restore() end)
     end
     sidebar_callbacks.tribute = function()
         sidebar_sprite:setImage( image_sidebar.tribute )
         playdate.getSystemMenu():removeAllMenuItems()
         playdate.getSystemMenu():addMenuItem("credits", sidebar_callbacks.credits)
+        playdate.getSystemMenu():addMenuItem("mode", function() mode = (mode + 1) % 2; restore() end)
     end
     sidebar_callbacks.tribute()
     sidebar_sprite:setCenter(0,0)
