@@ -56,7 +56,8 @@ local function mode_classic()
     wallTop = 0
 end
 
-mode = 1
+mode = 2
+
 local function set_mode(mode)
     if mode % 2 == 0 then
         mode_classic()
@@ -499,6 +500,12 @@ function gimme_update()
     playdate.timer.updateTimers()
     playdate.graphics.sprite.update()
     -- playdate.drawFPS()
+    -- eek.
+    if playdate.buttonIsPressed( "right" ) then
+        crank(10, 10)
+    elseif playdate.buttonIsPressed( "left" ) then
+        crank(-10, -10)
+    end
 
     fsm()
     for z = #zeroes,1,-1 do
