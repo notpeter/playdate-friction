@@ -162,6 +162,16 @@ function draw.shooter(diameter)
     gfx.unlockFocus()
     return image
 end
+
+function draw.gameover(width, height)
+    local image = img.new( width, height, black)
+    local gameover_image = img.new("images/gameover150")
+    gfx.lockFocus(image)
+        gameover_image:draw((width - 150) / 2, (height - 150) / 2)
+    gfx.unlockFocus()
+    return image
+end
+
 --
 -- function shooter_draw(diameter)
 --     local d = diameter - 1

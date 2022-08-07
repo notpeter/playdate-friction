@@ -93,7 +93,6 @@ local sound_wall = playdate.sound.sampleplayer.new("sound/wall")
 
 local ball_images = {}
 
--- local image_background = img.new("images/background")
 local image_background = draw.background( -- left_x, right_x, passing_line
     wallLeft - ballSize, wallRight + ballSize, wallBottom-1)
 local image_sidebar = {}
@@ -101,8 +100,9 @@ local sidebar_sprite = nil
 -- local image_tripod = img.new("images/tripod")
 local image_tripod = draw.tripod(tripod_size)
 
-local image_gameover = img.new("images/gameover250")
+local image_gameover = draw.gameover(screenX - 2 * sidebar, wallBottom)
 local goscreen = spr.new( image_gameover )
+goscreen:setCenter(0.5, 0)
 goscreen:setZIndex(500)
 local image_logo = img.new("images/logo")
 local title_sprite = spr.new( image_logo )
@@ -277,7 +277,7 @@ function moveball()
         sound_music:stop()
         -- createexp(b) -- create explosion
         b:remove()
-        goscreen:moveTo(startX, -80)
+        goscreen:moveTo(startX, -1 * goscreen.height)
         goscreen:setVisible(true)
         goscreen:add()
         playdate.datastore.delete("state")
@@ -432,7 +432,7 @@ function gomove()
     else
         goscreen:setVisible(true)
     end
-    local stop_y = 88
+    local stop_y = -1
     if goscreen.y < stop_y then
         goscreen:moveBy(0, 5)
         if goscreen.y > stop_y then
