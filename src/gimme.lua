@@ -23,10 +23,10 @@ local ballSizes
 local velocity
 local startX
 local startY
-local wallLefts
-local wallRights
-local wallBottoms
-local wallTops
+local wallLeft
+local wallRight
+local wallBottom
+local wallTop
 
 local function mode_playdate()
     sidebar = 75
@@ -153,7 +153,7 @@ TRIPP
     gfx.lockFocus(image)
         gfx.clear(white)
         gfx.setColor(black)
-        small_font:drawTextAligned(b, wallLeft // 2, 5, kTextAlignment.center, 2)
+        small_font:drawTextAligned(b, 37, 5, kTextAlignment.center, 2)
     gfx.unlockFocus()
     return image
 end
@@ -593,7 +593,7 @@ function gimme_setup()
 
     image_sidebar = {
         tribute=    img.new("images/sidebar1"),
-        credits=    draw_sidebar( img.new( sidebar, screenY ) ),
+        credits=    draw_sidebar( img.new( 75, screenY ) ),
     }
     sidebar_sprite = spr.new( image_sidebar )
     local sidebar_callbacks = {}
