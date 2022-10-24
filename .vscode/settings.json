@@ -1,0 +1,16 @@
+{
+    "playdate.source": "src",
+    "playdate.output": "build/out.pdx",
+    "playdate.sdkPath": "/Users/peter/Developer/PlaydateSDK",
+    "Lua.diagnostics.globals": [
+        "playdate", "import"
+    ],
+    "Lua.diagnostics.disable": [
+        "undefined-global", "lowercase-global"
+    ],
+    "Lua.runtime.noluanstandardSymbol": [
+        "+=", "-=", "*=", "/="
+    ],
+    "Lua.workspace.library": ["$PLAYDATE_SDK_PATH/CoreLibs"],
+    "Lua.workspace.preloadFileSize": 1000
+}
