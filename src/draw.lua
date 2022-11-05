@@ -114,8 +114,7 @@ function balls_setup()
     return gimme_balls
 end
 
-function draw.background(left_x, right_x, passing_y)
-    local image_background = img.new(screenX, screenY)
+function draw.background(image_background, left_x, right_x, passing_y)
     gfx.lockFocus(image_background)
         gfx.setColor(white)
         gfx.fillRect(0, 0, screenX, screenY)
@@ -127,7 +126,6 @@ function draw.background(left_x, right_x, passing_y)
         small_font:drawTextAligned("SCORE", right_x + (screenX - right_x) / 2, 15, kTextAlignment.center)
         small_font:drawTextAligned("HI\n\nSCORE", right_x + (screenX - right_x) / 2, 110, kTextAlignment.center)
     gfx.unlockFocus()
-    return image_background
 end
 
 -- The fixed base of the shooter
@@ -156,9 +154,9 @@ function draw.shooter(diameter)
         -- playdate.graphics.drawLine(0, 0, 0, d)
         -- playdate.graphics.drawLine(0, 0, d, 0)
         -- playdate.graphics.drawLine(d, d, d, 0)
-        playdate.graphics.fillCircleInRect(0, 0, 2 * ballSize, 2 * ballSize)
+        playdate.graphics.fillCircleInRect(0, 0, diameter, diameter)
         playdate.graphics.setColor(black)
-        playdate.graphics.drawCircleInRect(0, 0, 2 * ballSize, 2 * ballSize)
+        playdate.graphics.drawCircleInRect(0, 0, diameter, diameter)
     gfx.unlockFocus()
     return image
 end
@@ -168,6 +166,42 @@ function draw.gameover(width, height)
     local gameover_image = img.new("images/gameover150")
     gfx.lockFocus(image)
         gameover_image:draw((width - 150) / 2, (height - 150) / 2)
+    gfx.unlockFocus()
+    return image
+end
+
+function draw.score(image, num)
+    image:clear(white)
+    gfx.lockFocus(image)
+        gfx.setColor(black)
+        digit_font:drawTextAligned(num, 20, 0, kTextAlignment.center)
+    gfx.unlockFocus()
+end
+
+function draw.sidebar(image, font)
+    local b = [[GIMME
+FRICTION
+BABY
+
+
+CONCEPT
+CODE
+DESIGN
+WOUTER
+VISSER
+
+MUSICSAMPLE
+WE VS DEATH
+
+PLAYDATE
+PORT
+PETER
+TRIPP
+]]
+    gfx.lockFocus(image)
+        gfx.clear(white)
+        gfx.setColor(black)
+        small_font:drawTextAligned(b, 37, 5, kTextAlignment.center, 2)
     gfx.unlockFocus()
     return image
 end

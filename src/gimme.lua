@@ -19,7 +19,11 @@ end
 local screenX <const> = 400
 local screenY <const> = 240
 -- Variable board shapes
-local ballSizes
+local game_mode
+local sidebar
+local tripod_size
+local shooter_radius
+local ballSize
 local velocity
 local startX
 local startY
@@ -55,17 +59,14 @@ local function mode_classic()
     wallBottom = screenY - 42
     wallTop = 0
 end
-
-mode = 2
-
 local function set_mode(mode)
+    assert(mode ~= nil, "Attempting to set game_mode to nil, should be 1 or 2.")
     if mode % 2 == 0 then
         mode_classic()
     else
         mode_playdate()
     end
 end
-set_mode(mode)
 
 -- GLOBAL VARIABLES
 local i = 10                -- ? number of balls
@@ -93,70 +94,79 @@ local sound_wall = playdate.sound.sampleplayer.new("sound/wall")
 
 local ball_images = {}
 
-local image_background = draw.background( -- left_x, right_x, passing_line
-    wallLeft - ballSize, wallRight + ballSize, wallBottom-1)
-local image_sidebar = {}
-local sidebar_sprite = nil
--- local image_tripod = img.new("images/tripod")
-local image_tripod = draw.tripod(tripod_size)
-
-local image_gameover = draw.gameover(screenX - 2 * sidebar, wallBottom)
-local goscreen = spr.new( image_gameover )
-goscreen:setCenter(0.5, 0)
-goscreen:setZIndex(500)
+-- This are done globally for dumb reasons.
 local image_logo = img.new("images/logo")
 local title_sprite = spr.new( image_logo )
-local background = nil
+
+-- Images & sprites
+local image_tripod
+local tripod = spr.new( image_tripod )
+local image_gameover
+local image_background = img.new(screenX, screenY)
+local score_image
+local score_sprite
+local hiscore_image
+local hiscore_sprite
+local background -- sprite
+local sidebar_sprite
+local goscreen -- sprite
 local shooter_sprite = nil
+local image_sidebar = {}
+
+
+-- Images which are identical in both modes.
+local function image_setup_static()
+    hiscore_image = img.new( 45, 15, white)
+    hiscore_sprite = spr.new ( hiscore_image )
+
+    score_image = img.new( 45, 15, white)
+    score_sprite = spr.new ( score_image )
+
+
+    goscreen = spr.new( image_gameover )
+    goscreen:setCenter(0.5, 0)
+    goscreen:setZIndex(500)
+
+    background = spr.setBackgroundDrawingCallback(
+        function( x, y, width, height )
+            gfx.setClipRect( x, y, width, height )
+            image_background:draw( 0, 0 )
+            gfx.clearClipRect()
+        end
+    )
+end
+
+
+-- This does mode-dependent image/sprite setup
+local function image_setup_variable()
+    draw.background(image_background,
+        wallLeft - ballSize, -- left_x
+        wallRight + ballSize, -- right_x
+        wallBottom-1 -- passing_line
+    )
+    image_tripod = draw.tripod(tripod_size)
+    image_gameover = draw.gameover(screenX - 2 * sidebar, wallBottom)
+    tripod:setCenter(0.5,1)
+    tripod:moveTo(199, screenY)
+    tripod:add()
+    tripod:setZIndex(200)
+
+
+    score_sprite:moveTo(screenX - sidebar //2, 50)
+    score_sprite:add()
+    hiscore_sprite:moveTo(screenX - sidebar //2, 155)
+    hiscore_sprite:add()
+
+    image_sidebar = {
+        tribute=    img.new("images/sidebar1"),
+        credits=    draw.sidebar( img.new( 75, screenY ) ),
+    }
+    sidebar_sprite = spr.new( image_sidebar )
+
+end
 
 local small_font = playdate.graphics.font.new("fonts/gimme-small")
 local digit_font = playdate.graphics.font.new("fonts/gimme-digits")
-local score_image = img.new( 45, 15, white)
-local score_sprite = spr.new ( score_image )
-score_sprite:moveTo(screenX - sidebar //2, 50)
-score_sprite:add()
-local hiscore_image = img.new( 45, 15, white)
-local hiscore_sprite = spr.new ( hiscore_image )
-hiscore_sprite:moveTo(screenX - sidebar //2, 155)
-hiscore_sprite:add()
-
-local tripod = spr.new( image_tripod )
-
-local function draw_score(image, num)
-    image:clear(white)
-    gfx.lockFocus(image)
-        gfx.setColor(black)
-        digit_font:drawTextAligned(num, 20, 0, kTextAlignment.center)
-    gfx.unlockFocus()
-end
-
-local function draw_sidebar(image)
-    local b = [[GIMME
-FRICTION
-BABY
-
-
-CONCEPT
-CODE
-DESIGN
-WOUTER
-VISSER
-
-MUSICSAMPLE
-WE VS DEATH
-
-PLAYDATE
-PORT
-PETER
-TRIPP
-]]
-    gfx.lockFocus(image)
-        gfx.clear(white)
-        gfx.setColor(black)
-        small_font:drawTextAligned(b, 37, 5, kTextAlignment.center, 2)
-    gfx.unlockFocus()
-    return image
-end
 
 local function update_score(s)
     score = s
@@ -164,8 +174,8 @@ local function update_score(s)
         hiscore = score
         playdate.datastore.write({score=hiscore}, "score")
     end
-    draw_score(score_image, score)
-    draw_score(hiscore_image, hiscore)
+    draw.score(score_image, score)
+    draw.score(hiscore_image, hiscore)
 end
 
 local function next_image(r, n)
@@ -533,7 +543,7 @@ function save_state()
         l = l,
         barray = balls,
         score = score,
-        mode = mode,
+        game_mode = game_mode,
     }
     playdate.datastore.write(state, "state")
 end
@@ -551,7 +561,7 @@ function load_state(state)
     end
     b = barray[#barray]
     l = state["l"]
-    mode = state["mode"] or 1
+    game_mode = state["game_mode"] or 1
     score = state["score"]
 end
 
@@ -564,25 +574,19 @@ function gimme_setup()
         if state then
             load_state(state) -- maybe use pcall?
         else
+            game_mode = 1
             title_sprite:moveTo(200, 100)
             title_sprite:add()
         end
     end
 
-    background = spr.setBackgroundDrawingCallback(
-        function( x, y, width, height )
-            gfx.setClipRect( x, y, width, height )
-            image_background:draw( 0, 0 )
-            gfx.clearClipRect()
-        end
-    )
+    set_mode(game_mode)
+    image_setup_static()
+    image_setup_variable()
+
     gfx.setColor(black)
     update_score(score)
     newball()
-    tripod:setCenter(0.5,1)
-    tripod:moveTo(199, screenY)
-    tripod:add()
-    tripod:setZIndex(200)
 
     shooter_image = draw.shooter(ballSize * 2)
     shooter_sprite = spr.new( shooter_image )
@@ -590,24 +594,26 @@ function gimme_setup()
     shooter_sprite:setZIndex(201)
     shooter_sprite:add()
 
+    local function mode_toggle()
+        game_mode = (game_mode + 1) % 2
+        set_mode(game_mode)
+        image_setup_variable()
+        playdate.datastore.delete("state")
+        restore()
+    end
 
-    image_sidebar = {
-        tribute=    img.new("images/sidebar1"),
-        credits=    draw_sidebar( img.new( 75, screenY ) ),
-    }
-    sidebar_sprite = spr.new( image_sidebar )
     local sidebar_callbacks = {}
     sidebar_callbacks.credits = function()
         sidebar_sprite:setImage( image_sidebar.credits )
         playdate.getSystemMenu():removeAllMenuItems()
         playdate.getSystemMenu():addMenuItem("tribute", sidebar_callbacks.tribute)
-        playdate.getSystemMenu():addMenuItem("mode", function() mode = (mode + 1) % 2; restore() end)
+        playdate.getSystemMenu():addMenuItem("mode", mode_toggle)
     end
     sidebar_callbacks.tribute = function()
         sidebar_sprite:setImage( image_sidebar.tribute )
         playdate.getSystemMenu():removeAllMenuItems()
         playdate.getSystemMenu():addMenuItem("credits", sidebar_callbacks.credits)
-        playdate.getSystemMenu():addMenuItem("mode", function() mode = (mode + 1) % 2; restore() end)
+        playdate.getSystemMenu():addMenuItem("mode", mode_toggle)
     end
     sidebar_callbacks.tribute()
     sidebar_sprite:setCenter(0,0)
