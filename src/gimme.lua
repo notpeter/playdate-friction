@@ -18,13 +18,54 @@ end
 -- Constants
 local screenX <const> = 400
 local screenY <const> = 240
-local ballSize <const> = 9 -- was 10
-local startX <const> = screenX // 2 -- was 320
-local startY <const> = screenY - 20 -- was 450
-local wallLeft <const> = 75 + ballSize
-local wallRight <const> = screenX - wallLeft
-local wallBottom <const> = screenY - 62
-local wallTop <const> = 0
+-- Variable board shapes
+local ballSizes
+local velocity
+local startX
+local startY
+local wallLefts
+local wallRights
+local wallBottoms
+local wallTops
+
+local function mode_playdate()
+    sidebar = 75
+    ballSize = 9
+    tripod_size = 21
+    shooter_radius = 28
+    velocity = 3.5
+    startX = screenX // 2 -- was 320
+    startY = screenY - 10 -- was 450
+    wallLeft = sidebar + ballSize
+    wallRight = screenX - sidebar - ballSize
+    wallBottom = screenY - 62
+    wallTop = 0
+end
+local function mode_classic()
+    sidebar = 100
+    -- local x, y = 200, 240 -- original was 400x480
+    ballSize = 5          -- original was 10
+    tripod_size = 16
+    shooter_radius = 20
+    velocity = 3.225
+    startX = screenX // 2 -- was 320
+    startY = screenY - 10 -- was 450
+    wallLeft = sidebar + ballSize
+    wallRight = screenX - sidebar - ballSize
+    wallBottom = screenY - 42
+    wallTop = 0
+end
+
+mode = 2
+
+local function set_mode(mode)
+    if mode % 2 == 0 then
+        mode_classic()
+    else
+        mode_playdate()
+    end
+end
+set_mode(mode)
 
 -- GLOBAL VARIABLES
 local i = 10                -- ? number of balls
@@ -51,42 +92,35 @@ local sound_shoot = playdate.sound.sampleplayer.new("sound/shoot")
 local sound_wall = playdate.sound.sampleplayer.new("sound/wall")
 
 local ball_images = {}
-local shooter_image = img.new( 2 * ballSize, 2 * ballSize)
-local shooter_sprite = spr.new( shooter_image )
 
-local image_background = img.new("images/background")
+local image_background = draw.background( -- left_x, right_x, passing_line
+    wallLeft - ballSize, wallRight + ballSize, wallBottom-1)
 local image_sidebar = {}
 local sidebar_sprite = nil
-local image_tripod = img.new("images/tripod")
-local image_gameover = img.new("images/gameover250")
+-- local image_tripod = img.new("images/tripod")
+local image_tripod = draw.tripod(tripod_size)
+
+local image_gameover = draw.gameover(screenX - 2 * sidebar, wallBottom)
 local goscreen = spr.new( image_gameover )
+goscreen:setCenter(0.5, 0)
 goscreen:setZIndex(500)
 local image_logo = img.new("images/logo")
 local title_sprite = spr.new( image_logo )
 local background = nil
+local shooter_sprite = nil
 
 local small_font = playdate.graphics.font.new("fonts/gimme-small")
 local digit_font = playdate.graphics.font.new("fonts/gimme-digits")
-local score_image = img.new( 40, 15, white)
+local score_image = img.new( 45, 15, white)
 local score_sprite = spr.new ( score_image )
-score_sprite:moveTo(362, 50)
+score_sprite:moveTo(screenX - sidebar //2, 50)
 score_sprite:add()
 local hiscore_image = img.new( 45, 15, white)
 local hiscore_sprite = spr.new ( hiscore_image )
-hiscore_sprite:moveTo(362, 155)
+hiscore_sprite:moveTo(screenX - sidebar //2, 155)
 hiscore_sprite:add()
 
 local tripod = spr.new( image_tripod )
-
-local function draw_shooter(image)
-    gfx.lockFocus(image)
-        playdate.graphics.setColor(white)
-        playdate.graphics.fillCircleInRect(0, 0, 2 * ballSize, 2 * ballSize)
-        playdate.graphics.setColor(black)
-        playdate.graphics.drawCircleInRect(0, 0, 2 * ballSize, 2 * ballSize)
-    gfx.unlockFocus()
-    return image
-end
 
 local function draw_score(image, num)
     image:clear(white)
@@ -119,7 +153,7 @@ TRIPP
     gfx.lockFocus(image)
         gfx.clear(white)
         gfx.setColor(black)
-        small_font:drawTextAligned(b, 37, 5, kTextAlignment.center, 2)
+        small_font:drawTextAligned(b, wallLeft // 2, 5, kTextAlignment.center, 2)
     gfx.unlockFocus()
     return image
 end
@@ -136,9 +170,11 @@ end
 
 local function next_image(r, n)
     local im = ball_images[n][4]
+    local new_size = 4
     for size, image in pairs(ball_images[n]) do
         if r >= size then
             im = image
+            new_size = size
         end
     end
     return im
@@ -171,15 +207,22 @@ end
 
 function update_shooter()
     local angle_rad = rad(l.deg)
-    b.lx = math.cos(angle_rad) * (3.1 * ballSize) + startX
-    b.ly = math.sin(angle_rad) * (3.1 * ballSize) + startY
+    b.lx = math.cos(angle_rad) * shooter_radius + startX
+    b.ly = math.sin(angle_rad) * shooter_radius + startY
     arrow._x = b.lx
     arrow._y = b.ly
-    -- l  -- line = {startX, startY, b.lx, b.ly}
+    -- l  line = {startX, startY, b.lx, b.ly}
     local dx = b._x - b.lx
     local dy = b._y - b.ly
     arrow._rotation = deg(math.atan2(dy, dx)) -90
+    if math.floor(arrow._rotation) == -270 then
+        arrow._rotation += 360
+    end
+
+    gfx.setColor(black)
+    -- gfx.drawLine(startX, startY, b.lx, b.ly)
     shooter_sprite:moveTo(arrow._x, arrow._y)
+    -- shooter_sprite:setImage(shooter_images[math.floor(arrow._rotation)])
 end
 
 function shooter()
@@ -208,8 +251,8 @@ function shootnow()
         title_sprite:setVisible(false)
     end
     sound_shoot:play()
-    b.vx = (- (b.lx - startX)) / 3.5
-    b.vy = (- (b.ly - startY)) / 3.5
+    b.vx = (- (b.lx - startX)) / velocity
+    b.vy = (- (b.ly - startY)) / velocity
     fsm = moveball
     playdate.AButtonDown = nil
     playdate.upButtonDown = nil
@@ -234,7 +277,7 @@ function moveball()
         sound_music:stop()
         -- createexp(b) -- create explosion
         b:remove()
-        goscreen:moveTo(startX, -80)
+        goscreen:moveTo(startX, -1 * goscreen.height)
         goscreen:setVisible(true)
         goscreen:add()
         playdate.datastore.delete("state")
@@ -314,8 +357,10 @@ function grow2()
     local _loc1_ = news - b._xscale
     b._xscale = b._xscale + _loc1_ / 5
     b._yscale = b._yscale + _loc1_ / 5
+
     local img = next_image(b._xscale, b.n)
     b:setImage(img)
+    -- do the above, until we're within 1pixel of the new size.
     if _loc1_ < 1 then
         b._xscale = news
         b._yscale = news
@@ -387,7 +432,7 @@ function gomove()
     else
         goscreen:setVisible(true)
     end
-    local stop_y = 88
+    local stop_y = -1
     if goscreen.y < stop_y then
         goscreen:moveBy(0, 5)
         if goscreen.y > stop_y then
@@ -452,8 +497,15 @@ function playdate.crankUndocked()
 end
 
 function gimme_update()
-    playdate.graphics.sprite.update()
     playdate.timer.updateTimers()
+    playdate.graphics.sprite.update()
+    -- playdate.drawFPS()
+    -- eek.
+    if playdate.buttonIsPressed( "right" ) then
+        crank(10, 10)
+    elseif playdate.buttonIsPressed( "left" ) then
+        crank(-10, -10)
+    end
 
     fsm()
     for z = #zeroes,1,-1 do
@@ -464,6 +516,7 @@ function gimme_update()
             table.remove(zeroes, z)
         end
     end
+    -- shooter_image:draw(200,0)
 end
 
 function save_state()
@@ -480,6 +533,7 @@ function save_state()
         l = l,
         barray = balls,
         score = score,
+        mode = mode,
     }
     playdate.datastore.write(state, "state")
 end
@@ -497,6 +551,7 @@ function load_state(state)
     end
     b = barray[#barray]
     l = state["l"]
+    mode = state["mode"] or 1
     score = state["score"]
 end
 
@@ -513,6 +568,7 @@ function gimme_setup()
             title_sprite:add()
         end
     end
+
     background = spr.setBackgroundDrawingCallback(
         function( x, y, width, height )
             gfx.setClipRect( x, y, width, height )
@@ -523,21 +579,21 @@ function gimme_setup()
     gfx.setColor(black)
     update_score(score)
     newball()
-
-    tripod:moveTo(startX, screenY - 20)
+    tripod:setCenter(0.5,1)
+    tripod:moveTo(199, screenY)
     tripod:add()
     tripod:setZIndex(200)
 
-    draw_shooter(shooter_image)
+    shooter_image = draw.shooter(ballSize * 2)
+    shooter_sprite = spr.new( shooter_image )
     update_shooter()
     shooter_sprite:setZIndex(201)
     shooter_sprite:add()
 
 
-    local sidebar_x = 75
     image_sidebar = {
         tribute=    img.new("images/sidebar1"),
-        credits=    draw_sidebar( img.new( sidebar_x, screenY ) ),
+        credits=    draw_sidebar( img.new( sidebar, screenY ) ),
     }
     sidebar_sprite = spr.new( image_sidebar )
     local sidebar_callbacks = {}
@@ -545,15 +601,17 @@ function gimme_setup()
         sidebar_sprite:setImage( image_sidebar.credits )
         playdate.getSystemMenu():removeAllMenuItems()
         playdate.getSystemMenu():addMenuItem("tribute", sidebar_callbacks.tribute)
+        playdate.getSystemMenu():addMenuItem("mode", function() mode = (mode + 1) % 2; restore() end)
     end
     sidebar_callbacks.tribute = function()
         sidebar_sprite:setImage( image_sidebar.tribute )
         playdate.getSystemMenu():removeAllMenuItems()
         playdate.getSystemMenu():addMenuItem("credits", sidebar_callbacks.credits)
+        playdate.getSystemMenu():addMenuItem("mode", function() mode = (mode + 1) % 2; restore() end)
     end
     sidebar_callbacks.tribute()
     sidebar_sprite:setCenter(0,0)
-    sidebar_sprite:moveTo(0,0)
+    sidebar_sprite:moveTo((wallLeft - image_sidebar.tribute.width)//2 - 3,0)
     sidebar_sprite:add()
 
     sound_music:setVolume(0.1)
