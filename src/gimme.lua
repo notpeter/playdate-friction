@@ -572,15 +572,16 @@ function gimme_setup()
     else
         local state = playdate.datastore.read("state")
         if state then
+            game_mode = 1
             load_state(state) -- maybe use pcall?
         else
-            game_mode = 1
+            game_mode = 2
             title_sprite:moveTo(200, 100)
             title_sprite:add()
         end
     end
 
-    set_mode(game_mode)
+    set_mode(2)
     image_setup_static()
     image_setup_variable()
 
