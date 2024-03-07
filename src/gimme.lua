@@ -48,7 +48,7 @@ end
 local function mode_classic()
     sidebar = 100
     -- local x, y = 200, 240 -- original was 400x480
-    ballSize = 5          -- original was 10
+    ballSize = 5 -- original was 10
     tripod_size = 16
     shooter_radius = 20
     velocity = 3.225
@@ -69,21 +69,21 @@ local function set_mode(mode)
 end
 
 -- GLOBAL VARIABLES
-local i = 10                -- ? number of balls
-local friction = 0.975      -- coefficient of friction
-local n = -1                -- Next closest ball (num)
-local nd = 10000            -- Next closest ball distance
-local b = nil               -- Currently active Ball {lx,ly,r,vx,vy,f,m,_rotation}
-local l = {deg=180, mov=2}  -- Shooter state and step
-local arrow = {}            -- Rotating shooter {_x, _y, _rotation}
+local i = 10               -- ? number of balls
+local friction = 0.975     -- coefficient of friction
+local n = -1               -- Next closest ball (num)
+local nd = 10000           -- Next closest ball distance
+local b = nil              -- Currently active Ball {lx,ly,r,vx,vy,f,m,_rotation}
+local l = { deg = 180, mov = 2 } -- Shooter state and step
+local arrow = {}           -- Rotating shooter {_x, _y, _rotation}
 
 barray = {}
 ubarray = {}
 local zeroes = {}
-local firstshot = false     -- has the first shot occured
+local firstshot = false -- has the first shot occured
 local wall = false
-local news = 0              -- New Scale (growing to)
-local score = 0             -- Score
+local news = 0          -- New Scale (growing to)
+local score = 0         -- Score
 local hiscore = (playdate.datastore.read("score") or {})["score"] or 0
 local fsm = nil
 
@@ -96,11 +96,11 @@ local ball_images = {}
 
 -- This are done globally for dumb reasons.
 local image_logo = img.new("images/logo")
-local title_sprite = spr.new( image_logo )
+local title_sprite = spr.new(image_logo)
 
 -- Images & sprites
 local image_tripod
-local tripod = spr.new( image_tripod )
+local tripod = spr.new(image_tripod)
 local image_gameover
 local image_background = img.new(screenX, screenY)
 local score_image
@@ -109,28 +109,28 @@ local hiscore_image
 local hiscore_sprite
 local background -- sprite
 local sidebar_sprite
-local goscreen -- sprite
+local goscreen   -- sprite
 local shooter_sprite = nil
 local image_sidebar = {}
 
 
 -- Images which are identical in both modes.
 local function image_setup_static()
-    hiscore_image = img.new( 45, 15, white)
-    hiscore_sprite = spr.new ( hiscore_image )
+    hiscore_image = img.new(45, 15, white)
+    hiscore_sprite = spr.new(hiscore_image)
 
-    score_image = img.new( 45, 15, white)
-    score_sprite = spr.new ( score_image )
+    score_image = img.new(45, 15, white)
+    score_sprite = spr.new(score_image)
 
 
-    goscreen = spr.new( image_gameover )
+    goscreen = spr.new(image_gameover)
     goscreen:setCenter(0.5, 0)
     goscreen:setZIndex(500)
 
     background = spr.setBackgroundDrawingCallback(
-        function( x, y, width, height )
-            gfx.setClipRect( x, y, width, height )
-            image_background:draw( 0, 0 )
+        function(x, y, width, height)
+            gfx.setClipRect(x, y, width, height)
+            image_background:draw(0, 0)
             gfx.clearClipRect()
         end
     )
@@ -140,29 +140,28 @@ end
 -- This does mode-dependent image/sprite setup
 local function image_setup_variable()
     draw.background(image_background,
-        wallLeft - ballSize, -- left_x
+        wallLeft - ballSize,  -- left_x
         wallRight + ballSize, -- right_x
-        wallBottom-1 -- passing_line
+        wallBottom - 1        -- passing_line
     )
     image_tripod = draw.tripod(tripod_size)
     image_gameover = draw.gameover(screenX - 2 * sidebar, wallBottom)
-    tripod:setCenter(0.5,1)
+    tripod:setCenter(0.5, 1)
     tripod:moveTo(199, screenY)
     tripod:add()
     tripod:setZIndex(200)
 
 
-    score_sprite:moveTo(screenX - sidebar //2, 50)
+    score_sprite:moveTo(screenX - sidebar // 2, 50)
     score_sprite:add()
-    hiscore_sprite:moveTo(screenX - sidebar //2, 155)
+    hiscore_sprite:moveTo(screenX - sidebar // 2, 155)
     hiscore_sprite:add()
 
     image_sidebar = {
-        tribute=    img.new("images/sidebar1"),
-        credits=    draw.sidebar( img.new( 75, screenY ) ),
+        tribute = img.new("images/sidebar1"),
+        credits = draw.sidebar(img.new(75, screenY)),
     }
-    sidebar_sprite = spr.new( image_sidebar )
-
+    sidebar_sprite = spr.new(image_sidebar)
 end
 
 local small_font = playdate.graphics.font.new("fonts/gimme-small")
@@ -172,7 +171,7 @@ local function update_score(s)
     score = s
     if score > hiscore then
         hiscore = score
-        playdate.datastore.write({score=hiscore}, "score")
+        playdate.datastore.write({ score = hiscore }, "score")
     end
     draw.score(score_image, score)
     draw.score(hiscore_image, hiscore)
@@ -196,10 +195,10 @@ local function ball_str(b)
     return string.format("BallSprite(x=%s, y=%s, r=%s, vx=%s, vy=%s)", b._x, b._y, b.r, b.vx, b.vy)
 end
 
-function newball()
+local function newball()
     i = i + 1
-    b = spr.new( next_image(ballSize, 3) )
-    b:moveTo( startX, startY )
+    b = spr.new(next_image(ballSize, 3))
+    b:moveTo(startX, startY)
     b:setVisible(true)
     b:setZIndex(100)
     b:add()
@@ -207,12 +206,12 @@ function newball()
     b._yscale = ballSize
     b._x = startX
     b._y = startY
-    b.r = ballSize    -- radius
-    b.vx = 0          -- velocity
+    b.r = ballSize -- radius
+    b.vx = 0       -- velocity
     b.vy = 0
-    b.m = 1    -- mass?
-    b.n = 3    -- frame number 1-4 (3,2,1,0)
-    barray[#barray+1] = b
+    b.m = 1        -- mass?
+    b.n = 3        -- frame number 1-4 (3,2,1,0)
+    barray[#barray + 1] = b
 end
 
 function update_shooter()
@@ -224,7 +223,7 @@ function update_shooter()
     -- l  line = {startX, startY, b.lx, b.ly}
     local dx = b._x - b.lx
     local dy = b._y - b.ly
-    arrow._rotation = deg(math.atan2(dy, dx)) -90
+    arrow._rotation = deg(math.atan2(dy, dx)) - 90
     if math.floor(arrow._rotation) == -270 then
         arrow._rotation += 360
     end
@@ -241,6 +240,7 @@ function shooter()
         if num < min then return min end
         return num
     end
+
     playdate.AButtonDown = shootnow
     playdate.upButtonDown = shootnow
     if playdate.isCrankDocked() then
@@ -250,7 +250,7 @@ function shooter()
         end
         -- original game only supported 0,180; step=2.
         -- this rand term at the end keeps things interesting.
-        l.deg = (l.deg + l.mov) + math.random(-10,10) * .01;
+        l.deg = (l.deg + l.mov) + math.random(-10, 10) * .01;
     end
     update_shooter()
 end
@@ -261,8 +261,8 @@ function shootnow()
         title_sprite:setVisible(false)
     end
     sound_shoot:play()
-    b.vx = (- (b.lx - startX)) / velocity
-    b.vy = (- (b.ly - startY)) / velocity
+    b.vx = (-(b.lx - startX)) / velocity
+    b.vy = (-(b.ly - startY)) / velocity
     fsm = moveball
     playdate.AButtonDown = nil
     playdate.upButtonDown = nil
@@ -272,18 +272,18 @@ function moveball()
     findn()
     b.vx *= friction
     b.vy *= friction
-    if(b._x - b.vx < wallLeft or b._x - b.vx > wallRight) then
+    if (b._x - b.vx < wallLeft or b._x - b.vx > wallRight) then
         b.vx *= -1
         sound_wall:play()
     end
-    if(b._y - b.vy - b.r < wallTop) then
+    if (b._y - b.vy - b.r < wallTop) then
         b.vy *= -1
         sound_wall:play()
     end
     b._x -= b.vx
     b._y -= b.vy
     b:moveTo(b._x, b._y)
-    if(b.vy < 0 and b._y + b.r > wallBottom) then -- death
+    if (b.vy < 0 and b._y + b.r > wallBottom) then -- death
         sound_music:stop()
         -- createexp(b) -- create explosion
         b:remove()
@@ -294,7 +294,7 @@ function moveball()
         fsm = gomove
         playdate.AButtonDown = restore
         playdate.upButtonDown = restore
-        playdate.cranked = nil  -- disable moving shooter when dead.
+        playdate.cranked = nil -- disable moving shooter when dead.
     end
     -- Use of 0.2 here is arbitrary. Playdate only supports integer x,y
     -- positions. Original (flash) could render non integer coords. Anything
@@ -317,7 +317,7 @@ function findn()
             local xdist_next = b._x - b.vx - barray[p]._x
             local ydist_next = b._y - b.vy - barray[p]._y
             local ball_dist = math.sqrt(xdist_next * xdist_next + ydist_next * ydist_next) - barray[p].r
-            if(ball_dist < nd) then
+            if (ball_dist < nd) then
                 nd = ball_dist
                 n = p
             end
@@ -330,7 +330,7 @@ function findn()
 end
 
 function calc()
-    for p = 1,#barray-1 do -- last element of barray is b, so skip
+    for p = 1, #barray - 1 do -- last element of barray is b, so skip
         local xdist = b._x - barray[p]._x
         local ydist = b._y - barray[p]._y
         local next_dist = math.sqrt(xdist * xdist + ydist * ydist) - barray[p].r
@@ -352,10 +352,10 @@ function calc()
         nd = b._y - wallTop
         wall = true
     end
-    if(wallBottom - b._y < nd) then
+    if (wallBottom - b._y < nd) then
         nd = wallBottom - b._y
         if nd < 0 then
-            ubarray[#ubarray+1] = b
+            ubarray[#ubarray + 1] = b
             table.remove(barray, #barray)
             nd = math.abs(nd)
         end
@@ -397,15 +397,15 @@ function checkColl(b1, b2)
     local xdist = b2._x - b1._x
     local ydist = b2._y - b1._y
     local dist = math.sqrt(xdist * xdist + ydist * ydist) -- center to center
-    if dist < b1.r + b2.r then -- Collide
-        local between = dist - (b1.r + b2.r) -- between balls
+    if dist < b1.r + b2.r then                            -- Collide
+        local between = dist - (b1.r + b2.r)              -- between balls
         local xratio = xdist / dist
         local yratio = ydist / dist
         b1._x = b1._x + between * xratio
         b1._y = b1._y + between * yratio
         b2.n = b2.n - 1
         sound_crack:play()
-        b2:setImage( next_image(b2.r, b2.n) )
+        b2:setImage(next_image(b2.r, b2.n))
 
         local atan2 = math.atan2(ydist, xdist)
         local cosa = math.cos(atan2)
@@ -423,10 +423,10 @@ function checkColl(b1, b2)
         local diff = (b1.r + b2.r - dist) / 2
         cosd = cosa * diff
         sind = sina * diff
-        if(b2.n == 0) then
+        if (b2.n == 0) then
             update_score(score + 1)
-            b2:setImage( next_image(b2.r, b2.n))
-            zeroes[#zeroes+1] = b2
+            b2:setImage(next_image(b2.r, b2.n))
+            zeroes[#zeroes + 1] = b2
             b2.vx = 0
             b2.vy = 5
             table.remove(barray, n)
@@ -435,7 +435,7 @@ function checkColl(b1, b2)
     end
 end
 
- -- game over screen move down
+-- game over screen move down
 function gomove()
     if playdate.buttonIsPressed(playdate.kButtonB) then
         goscreen:setVisible(false)
@@ -454,10 +454,10 @@ end
 function restore()
     update_score(0)
     goscreen:remove()
-    for j = 1,#barray do
+    for j = 1, #barray do
         barray[j]:remove()
     end
-    for k = 1,#ubarray do
+    for k = 1, #ubarray do
         ubarray[k]:remove()
     end
     ubarray = {}
@@ -476,7 +476,6 @@ function restore()
         playdate.cranked = crank
     end
 end
-
 
 -- Create parts of ball that fall
 function createpart(b1, b2)
@@ -511,14 +510,14 @@ function gimme_update()
     playdate.graphics.sprite.update()
     -- playdate.drawFPS()
     -- eek.
-    if playdate.buttonIsPressed( "right" ) then
+    if playdate.buttonIsPressed("right") then
         crank(10, 10)
-    elseif playdate.buttonIsPressed( "left" ) then
+    elseif playdate.buttonIsPressed("left") then
         crank(-10, -10)
     end
 
     fsm()
-    for z = #zeroes,1,-1 do
+    for z = #zeroes, 1, -1 do
         local zero = zeroes[z]
         zero:moveBy(zero.vx, zero.vy)
         if zero.y > 250 + zero.r then
@@ -533,10 +532,10 @@ function save_state()
     local balls = {}
     for _, ball in ipairs(barray) do
         local bb = {}
-        for _a, attr in ipairs({"_xscale", "_yscale", "_x", "_y", "vx", "vy", "m", "n", "r"}) do
+        for _a, attr in ipairs({ "_xscale", "_yscale", "_x", "_y", "vx", "vy", "m", "n", "r" }) do
             bb[attr] = ball[attr]
         end
-        balls[#balls+1] = bb
+        balls[#balls + 1] = bb
     end
     table.remove(balls) -- the last ball in barray is the unshot shot (b)
     local state = {
@@ -550,14 +549,14 @@ end
 
 function load_state(state)
     for _, _ball in ipairs(state["barray"]) do
-        local _b = spr.new( next_image(_ball.r, _ball.n) )
+        local _b = spr.new(next_image(_ball.r, _ball.n))
         _b:moveTo(_ball._x, _ball._y)
         _b:setZIndex(100)
         _b:add()
         for attr, value in pairs(_ball) do
             _b[attr] = value
         end
-        barray[#barray+1] = _b
+        barray[#barray + 1] = _b
     end
     b = barray[#barray]
     l = state["l"]
@@ -590,7 +589,7 @@ function gimme_setup()
     newball()
 
     shooter_image = draw.shooter(ballSize * 2)
-    shooter_sprite = spr.new( shooter_image )
+    shooter_sprite = spr.new(shooter_image)
     update_shooter()
     shooter_sprite:setZIndex(201)
     shooter_sprite:add()
@@ -605,20 +604,20 @@ function gimme_setup()
 
     local sidebar_callbacks = {}
     sidebar_callbacks.credits = function()
-        sidebar_sprite:setImage( image_sidebar.credits )
+        sidebar_sprite:setImage(image_sidebar.credits)
         playdate.getSystemMenu():removeAllMenuItems()
         playdate.getSystemMenu():addMenuItem("tribute", sidebar_callbacks.tribute)
         playdate.getSystemMenu():addMenuItem("mode", mode_toggle)
     end
     sidebar_callbacks.tribute = function()
-        sidebar_sprite:setImage( image_sidebar.tribute )
+        sidebar_sprite:setImage(image_sidebar.tribute)
         playdate.getSystemMenu():removeAllMenuItems()
         playdate.getSystemMenu():addMenuItem("credits", sidebar_callbacks.credits)
         playdate.getSystemMenu():addMenuItem("mode", mode_toggle)
     end
     sidebar_callbacks.tribute()
-    sidebar_sprite:setCenter(0,0)
-    sidebar_sprite:moveTo((wallLeft - image_sidebar.tribute.width)//2 - 3,0)
+    sidebar_sprite:setCenter(0, 0)
+    sidebar_sprite:moveTo((wallLeft - image_sidebar.tribute.width) // 2 - 3, 0)
     sidebar_sprite:add()
 
     sound_music:setVolume(0.1)

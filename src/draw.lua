@@ -26,10 +26,10 @@ function draw.ball3(radius)
     gfx.fillCircleInRect(0, 0, radius * 2, radius * 2)
     gfx.setLineWidth(line_width)
     gfx.setColor(black)
-    gfx.drawLine(right, top, right, bottom)     -- right edge
-    gfx.drawLine(right, top, left, top)         -- top
-    gfx.drawLine(right, middle, left_mid, middle)   -- middle
-    gfx.drawLine(right, bottom, left, bottom)   -- bottom
+    gfx.drawLine(right, top, right, bottom)       -- right edge
+    gfx.drawLine(right, top, left, top)           -- top
+    gfx.drawLine(right, middle, left_mid, middle) -- middle
+    gfx.drawLine(right, bottom, left, bottom)     -- bottom
 end
 
 function draw.ball2(radius)
@@ -43,11 +43,11 @@ function draw.ball2(radius)
     gfx.fillCircleInRect(0, 0, radius * 2, radius * 2)
     gfx.setLineWidth(line_width)
     gfx.setColor(black)
-    gfx.drawLine(right, top, left, top)         -- top
-    gfx.drawLine(right, top, right, middle)     -- up right
-    gfx.drawLine(right, middle, left, middle)   -- middle
-    gfx.drawLine(left, bottom, left, middle)    -- bottom left
-    gfx.drawLine(right, bottom, left, bottom)   -- bottom
+    gfx.drawLine(right, top, left, top)       -- top
+    gfx.drawLine(right, top, right, middle)   -- up right
+    gfx.drawLine(right, middle, left, middle) -- middle
+    gfx.drawLine(left, bottom, left, middle)  -- bottom left
+    gfx.drawLine(right, bottom, left, bottom) -- bottom
 end
 
 function draw.ball1(radius)
@@ -79,14 +79,14 @@ end
 local function loadImage(diameter, cnt)
     -- Note returns nil file not found. Which won't get stored in the Lua tbl.
     local filename = string.format("images/ball_%s-%s", diameter, cnt)
-    local i = img.new( filename )
+    local i = img.new(filename)
     return i
 end
 
 local function makeImage(radius, draw_func)
     local image = img.new(radius * 2, radius * 2)
     gfx.lockFocus(image)
-        draw_func(radius)
+    draw_func(radius)
     gfx.unlockFocus()
     return image
 end
@@ -100,10 +100,10 @@ function balls_setup()
     local min_size, max_size = 1, 175
     gfx.setLineCapStyle(playdate.graphics.kLineCapStyleSquare)
     for n, draw_func in pairs(
-        {[0]=draw.ball0, [1]=draw.ball1, [2]=draw.ball2, [3]=draw.ball3}
+        { [0] = draw.ball0, [1] = draw.ball1, [2] = draw.ball2, [3] = draw.ball3 }
     ) do
         gimme_balls[n] = {}
-        for radius = min_size,max_size do
+        for radius = min_size, max_size do
             if radius >= 9 then -- custom drawn balls are up to 16x16 (radius=8)
                 gimme_balls[n][radius] = makeImage(radius, draw_func)
             else
@@ -116,15 +116,15 @@ end
 
 function draw.background(image_background, left_x, right_x, passing_y)
     gfx.lockFocus(image_background)
-        gfx.setColor(white)
-        gfx.fillRect(0, 0, screenX, screenY)
-        gfx.setColor(black)
-        gfx.fillRect(left_x, 0, right_x - left_x, screenY)
-        gfx.setColor(white)
-        gfx.drawLine(left_x, passing_y, right_x, passing_y)
-        gfx.setColor(black)
-        small_font:drawTextAligned("SCORE", right_x + (screenX - right_x) / 2, 15, kTextAlignment.center)
-        small_font:drawTextAligned("HI\n\nSCORE", right_x + (screenX - right_x) / 2, 110, kTextAlignment.center)
+    gfx.setColor(white)
+    gfx.fillRect(0, 0, screenX, screenY)
+    gfx.setColor(black)
+    gfx.fillRect(left_x, 0, right_x - left_x, screenY)
+    gfx.setColor(white)
+    gfx.drawLine(left_x, passing_y, right_x, passing_y)
+    gfx.setColor(black)
+    small_font:drawTextAligned("SCORE", right_x + (screenX - right_x) / 2, 15, kTextAlignment.center)
+    small_font:drawTextAligned("HI\n\nSCORE", right_x + (screenX - right_x) / 2, 110, kTextAlignment.center)
     gfx.unlockFocus()
 end
 
@@ -133,39 +133,39 @@ function draw.tripod(tripod_size)
     local x, y = 42, 42
     local image_tripod = img.new(x, y)
     gfx.lockFocus(image_tripod)
-        gfx.setColor(white)
-        gfx.fillCircleAtPoint(x // 2, 30, tripod_size)
-        local rx = x // 2 - tripod_size
-        gfx.fillRect(rx, 25, y - 2 * rx, y-25)
-        -- TODO: Make tall/narrow digit variation instead of this ugly hack.
-        local tracking = math.floor(tripod_size // 20) + 1
-        digit_font:setTracking(tracking)
-        digit_font:drawTextAligned("3210", x // 2, 25, kTextAlignment.center)
+    gfx.setColor(white)
+    gfx.fillCircleAtPoint(x // 2, 30, tripod_size)
+    local rx = x // 2 - tripod_size
+    gfx.fillRect(rx, 25, y - 2 * rx, y - 25)
+    -- TODO: Make tall/narrow digit variation instead of this ugly hack.
+    local tracking = math.floor(tripod_size // 20) + 1
+    digit_font:setTracking(tracking)
+    digit_font:drawTextAligned("3210", x // 2, 25, kTextAlignment.center)
     gfx.unlockFocus()
     return image_tripod
 end
 
 -- The moving aimer part of the shooter.
 function draw.shooter(diameter)
-    local image = img.new( diameter, diameter)
+    local image = img.new(diameter, diameter)
     local d = diameter - 1
     gfx.lockFocus(image)
-        playdate.graphics.setColor(white)
-        -- playdate.graphics.drawLine(0, 0, 0, d)
-        -- playdate.graphics.drawLine(0, 0, d, 0)
-        -- playdate.graphics.drawLine(d, d, d, 0)
-        playdate.graphics.fillCircleInRect(0, 0, diameter, diameter)
-        playdate.graphics.setColor(black)
-        playdate.graphics.drawCircleInRect(0, 0, diameter, diameter)
+    playdate.graphics.setColor(white)
+    -- playdate.graphics.drawLine(0, 0, 0, d)
+    -- playdate.graphics.drawLine(0, 0, d, 0)
+    -- playdate.graphics.drawLine(d, d, d, 0)
+    playdate.graphics.fillCircleInRect(0, 0, diameter, diameter)
+    playdate.graphics.setColor(black)
+    playdate.graphics.drawCircleInRect(0, 0, diameter, diameter)
     gfx.unlockFocus()
     return image
 end
 
 function draw.gameover(width, height)
-    local image = img.new( width, height, black)
+    local image = img.new(width, height, black)
     local gameover_image = img.new("images/gameover150")
     gfx.lockFocus(image)
-        gameover_image:draw((width - 150) / 2, (height - 150) / 2)
+    gameover_image:draw((width - 150) / 2, (height - 150) / 2)
     gfx.unlockFocus()
     return image
 end
@@ -173,13 +173,13 @@ end
 function draw.score(image, num)
     image:clear(white)
     gfx.lockFocus(image)
-        gfx.setColor(black)
-        digit_font:drawTextAligned(num, 20, 0, kTextAlignment.center)
+    gfx.setColor(black)
+    digit_font:drawTextAligned(num, 20, 0, kTextAlignment.center)
     gfx.unlockFocus()
 end
 
 function draw.sidebar(image, font)
-    local b = [[GIMME
+    local s = [[GIMME
 FRICTION
 BABY
 
@@ -199,9 +199,9 @@ PETER
 TRIPP
 ]]
     gfx.lockFocus(image)
-        gfx.clear(white)
-        gfx.setColor(black)
-        small_font:drawTextAligned(b, 37, 5, kTextAlignment.center, 2)
+    gfx.clear(white)
+    gfx.setColor(black)
+    small_font:drawTextAligned(s, 37, 5, kTextAlignment.center, 2)
     gfx.unlockFocus()
     return image
 end
