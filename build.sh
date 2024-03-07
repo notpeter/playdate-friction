@@ -53,7 +53,7 @@ function docker_build {
 
 }
 
-#macos_build
-docker_build
+macos_build
+# docker_build
 echo "$OUTPDX"
 open "$OUTPDX"
