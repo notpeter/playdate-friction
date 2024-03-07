@@ -69,13 +69,13 @@ local function set_mode(mode)
 end
 
 -- GLOBAL VARIABLES
-local i = 10               -- ? number of balls
-local friction = 0.975     -- coefficient of friction
-local n = -1               -- Next closest ball (num)
-local nd = 10000           -- Next closest ball distance
-local b = nil              -- Currently active Ball {lx,ly,r,vx,vy,f,m,_rotation}
+local i = 10                     -- ? number of balls
+local friction = 0.975           -- coefficient of friction
+local n = -1                     -- Next closest ball (num)
+local nd = 10000                 -- Next closest ball distance
+local b = nil                    -- Currently active Ball {lx,ly,r,vx,vy,f,m,_rotation}
 local l = { deg = 180, mov = 2 } -- Shooter state and step
-local arrow = {}           -- Rotating shooter {_x, _y, _rotation}
+local arrow = {}                 -- Rotating shooter {_x, _y, _rotation}
 
 barray = {}
 ubarray = {}
@@ -177,19 +177,6 @@ local function update_score(s)
     draw.score(hiscore_image, hiscore)
 end
 
-local function next_image(r, n)
-    local im = ball_images[n][4]
-    local new_size = 4
-    for size, image in pairs(ball_images[n]) do
-        if r >= size then
-            im = image
-            new_size = size
-        end
-    end
-    return im
-end
-
-
 -- local title_screen = playdate.graphics.sprite.new(320, 200)
 local function ball_str(b)
     return string.format("BallSprite(x=%s, y=%s, r=%s, vx=%s, vy=%s)", b._x, b._y, b.r, b.vx, b.vy)
@@ -197,7 +184,7 @@ end
 
 local function newball()
     i = i + 1
-    b = spr.new(next_image(ballSize, 3))
+    b = spr.new(get_ball(ballSize, 3))
     b:moveTo(startX, startY)
     b:setVisible(true)
     b:setZIndex(100)
@@ -367,8 +354,7 @@ function grow2()
     local _loc1_ = news - b._xscale
     b._xscale = b._xscale + _loc1_ / 5
     b._yscale = b._yscale + _loc1_ / 5
-
-    local img = next_image(b._xscale, b.n)
+    local img = get_ball(b._xscale, b.n)
     b:setImage(img)
     -- do the above, until we're within 1pixel of the new size.
     if _loc1_ < 1 then
@@ -383,7 +369,7 @@ function grow2()
             nd = 3
         end
         b.r = nd
-        b:setImage(next_image(b.r, b.n))
+        b:setImage(get_ball(b.r, b.n))
         newball()
         fsm = shooter
         nd = 10000
@@ -405,7 +391,7 @@ function checkColl(b1, b2)
         b1._y = b1._y + between * yratio
         b2.n = b2.n - 1
         sound_crack:play()
-        b2:setImage(next_image(b2.r, b2.n))
+        b2:setImage(get_ball(b2.r, b2.n))
 
         local atan2 = math.atan2(ydist, xdist)
         local cosa = math.cos(atan2)
@@ -425,7 +411,7 @@ function checkColl(b1, b2)
         sind = sina * diff
         if (b2.n == 0) then
             update_score(score + 1)
-            b2:setImage(next_image(b2.r, b2.n))
+            b2:setImage(get_ball(b2.r, b2.n))
             zeroes[#zeroes + 1] = b2
             b2.vx = 0
             b2.vy = 5
@@ -549,7 +535,7 @@ end
 
 function load_state(state)
     for _, _ball in ipairs(state["barray"]) do
-        local _b = spr.new(next_image(_ball.r, _ball.n))
+        local _b = spr.new(get_ball(_ball.r, _ball.n))
         _b:moveTo(_ball._x, _ball._y)
         _b:setZIndex(100)
         _b:add()

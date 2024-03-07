@@ -10,7 +10,7 @@ local screenY <const> = 240
 local digit_font = playdate.graphics.font.new("fonts/gimme-digits")
 local small_font = playdate.graphics.font.new("fonts/gimme-small")
 
-local gimme_balls = nil
+gimme_balls = nil
 
 draw = {}
 
@@ -92,6 +92,7 @@ local function makeImage(radius, draw_func)
 end
 
 function balls_setup()
+    print("ball setup")
     if gimme_balls then
         return gimme_balls
     else
