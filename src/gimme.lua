@@ -12,11 +12,16 @@ local math_floor <const> = math.floor
 local math_random <const> = math.random
 local math_sqrt <const> = math.sqrt
 
--- Helper functions
+--- Convert from degrees to radians
+---@param degrees number
+---@return number radians
 local function rad(degrees)
     return degrees * 0.017453292519943295
 end
 
+--- Convert from radians to degrees
+---@param radians number
+---@return number degrees
 local function deg(radians)
     return radians * 57.29577951308232
 end
@@ -33,18 +38,20 @@ local wallBottom <const> = screenY - 62
 local wallTop <const> = 0
 
 -- GLOBAL VARIABLES
-local i = 10                     -- ? number of balls
-local friction = 0.975           -- coefficient of friction
-local n = -1                     -- Next closest ball (num)
-local nd = 10000                 -- Next closest ball distance
----@class _Sprite
-local b = nil                    -- Currently active Ball {lx,ly,r,vx,vy,f,m,_rotation}
-local l = { deg = 180, mov = 2 } -- Shooter state and step
-local arrow = {}                 -- Rotating shooter {_x, _y, _rotation}
 
-barray = {}
-ubarray = {}
-local zeroes = {}
+local i = 10                     --- number of balls
+local friction = 0.975           --- coefficient of friction
+local n = -1                     --- Next closest ball (num)
+local nd = 10000                 --- Next closest ball distance
+---@class _BallSprite: _Sprite
+local b = nil                    --- Currently active Ball {lx,ly,r,vx,vy,f,m,_rotation}
+local l = { deg = 180, mov = 2 } --- Shooter state and step
+---@class Arrow
+local arrow = {}                 --- Rotating shooter {_x, _y, _rotation}
+
+barray = {} ---@type _BallSprite[]
+ubarray = {} ---@type _BallSprite[]
+local zeroes = {} ---@type _BallSprite[]
 local firstshot = false -- has the first shot occured
 local wall = false
 local news = 0          -- New Scale (growing to)
@@ -143,27 +150,33 @@ end
 
 
 -- local title_screen = playdate.graphics.sprite.new(320, 200)
+
+--- Print a string representation of a BallSprite
+---@param b _BallSprite
+---@return string
 local function ball_str(b)
     return string.format("BallSprite(x=%s, y=%s, r=%s, vx=%s, vy=%s)", b._x, b._y, b.r, b.vx, b.vy)
 end
 
 function newball()
     i = i + 1
-    b = spr.new(get_ball(ballSize, 3))
-    b:moveTo(startX, startY)
-    b:setVisible(true)
-    b:setZIndex(100)
-    b:add()
-    b._xscale = ballSize
-    b._yscale = ballSize
-    b._x = startX
-    b._y = startY
-    b.r = ballSize -- radius
-    b.vx = 0       -- velocity
-    b.vy = 0
-    b.m = 1        -- mass?
-    b.n = 3        -- frame number 1-4 (3,2,1,0)
-    barray[#barray + 1] = b
+    ---@class _BallSprite
+    local ball = spr.new(get_ball(ballSize, 3))
+    ball:moveTo(startX, startY)
+    ball:setVisible(true)
+    ball:setZIndex(100)
+    ball:add()
+    ball._xscale = ballSize
+    ball._yscale = ballSize
+    ball._x = startX  --- starting x
+    ball._y = startY  --- starting y
+    ball.r = ballSize --- radius
+    ball.vx = 0       --- x velocity
+    ball.vy = 0       --- y velocity
+    ball.m = 1        --- mass?
+    ball.n = 3        --- frame number 1-4 (3,2,1,0)
+    b = ball
+    barray[#barray + 1] = ball
 end
 
 function update_shooter()
@@ -175,11 +188,16 @@ function update_shooter()
     -- l  -- line = {startX, startY, b.lx, b.ly}
     local dx = b._x - b.lx
     local dy = b._y - b.ly
-    arrow._rotation = deg(math_atan(dy, dx)) - 90
+    arrow._rotation = deg(math_atan(dy, dx)) - 90 --- Rotation as degrees
     shooter_sprite:moveTo(arrow._x, arrow._y)
 end
 
 function shooter()
+    --- Clamp to a range
+    ---@param num number Number
+    ---@param min number Minimum value
+    ---@param max number Maximum value
+    ---@return number
     function _clamp(num, min, max)
         if num > max then return max end
         if num < min then return min end
@@ -336,6 +354,9 @@ function grow2()
     end
 end
 
+--- Check for a collision between two balls
+---@param b1 _BallSprite
+---@param b2 _BallSprite
 function checkColl(b1, b2)
     local xdist = b2._x - b1._x
     local ydist = b2._y - b1._y
@@ -483,7 +504,7 @@ end
 
 function load_state(state)
     for _, _ball in ipairs(state["barray"]) do
-        local _b = spr.new(get_ball(_ball.r, _ball.n))
+        local _b = spr.new(get_ball(_ball.r, _ball.n)) ---@class _BallSprite
         _b:moveTo(_ball._x, _ball._y)
         _b:setZIndex(100)
         _b:add()
