@@ -520,7 +520,7 @@ end
 
 function gimme_setup()
     ball_images = balls_setup()
-    if playdate.buttonIsPressed("B") then
+    if playdate.buttonIsPressed(playdate.kButtonB) then
         playdate.datastore.delete("state")
     else
         local state = playdate.datastore.read("state")
@@ -557,7 +557,7 @@ function gimme_setup()
         tribute = img_new("images/sidebar1"),
         credits = draw_sidebar(img_new(sidebar_x, screenY)),
     }
-    sidebar_sprite = spr.new(image_sidebar)
+    sidebar_sprite = spr.new(image_sidebar.tribute)
     local sidebar_callbacks = {}
     sidebar_callbacks.credits = function()
         sidebar_sprite:setImage(image_sidebar.credits)
